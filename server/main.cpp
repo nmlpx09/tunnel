@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <linux/if.h>
 #include <linux/if_tun.h>
+#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
@@ -22,8 +23,9 @@ int main() {
     std::vector<std::uint8_t> buf(dataSize, 0);
     sockaddr_in sockaddrServer, sockaddrClient;
     ifreq ifr;
+    epoll_event events[2];
 
-    std::int32_t tunfd = -1, sockfd = -1;
+    std::int32_t tunfd = -1, sockfd = -1, epollfd = -1;
 
     if(tunfd = open("/dev/net/tun", O_RDWR); tunfd < 0) {
         std::cerr << "failed open tun\n";
@@ -64,37 +66,59 @@ int main() {
 
     fcntl(sockfd, F_SETFL, O_NONBLOCK);
     fcntl(tunfd, F_SETFL, O_NONBLOCK);
-    auto  maxfd = ( sockfd > tunfd) ? sockfd : tunfd;
+
+    if (epollfd = epoll_create1(0); epollfd < 0) {
+        std::cerr << "failed epoll create\n";
+        close(tunfd);
+        close(sockfd);
+        return 1;
+    }
+
+    epoll_event event;
+
+    event.events = EPOLLIN;
+    event.data.fd = sockfd;
+    if (auto err = epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &event); err < 0) {
+        std::cerr << "failed epoll create\n";
+        close(tunfd);
+        close(sockfd);
+        close(epollfd);
+        return 1;
+    }
+
+    event.events = EPOLLIN;
+    event.data.fd = tunfd;
+    if (auto err = epoll_ctl(epollfd, EPOLL_CTL_ADD, tunfd, &event); err < 0) {
+        std::cerr << "failed epoll create\n";
+        close(tunfd);
+        close(sockfd);
+        close(epollfd);
+        return 1;
+    }
 
     for(;;) {
-        fd_set rfds;
-        FD_ZERO(&rfds);
-        FD_SET(sockfd, &rfds);
-        FD_SET(tunfd, &rfds);
-
-        auto ret = select(maxfd + 1, &rfds, NULL, NULL, NULL);
-
-        if (ret < 0) {
+        auto nfds = epoll_wait(epollfd, events, 2, -1);
+        if (nfds == -1) {
+            std::cerr << "failed epoll wait\n";
             continue;
         }
 
-        if (FD_ISSET(tunfd, &rfds)) {
-            auto readSize = read(tunfd, buf.data(), dataSize);
-            if (readSize <= 0) {
-                continue;
+        for (auto index = 0; index < nfds; ++index) {
+            if (events[index].data.fd == tunfd) {
+                auto readSize = read(tunfd, buf.data(), dataSize);
+                if (readSize <= 0) {
+                    continue;
+                }
+                sendto(sockfd, buf.data(), readSize, 0, reinterpret_cast<const sockaddr*>(&sockaddrClient), sizeof(sockaddrClient));
             }
-            std::cout << "read:" << readSize << std::endl;
-            sendto(sockfd, buf.data(), readSize, 0, reinterpret_cast<const sockaddr*>(&sockaddrClient), sizeof(sockaddrClient));
-        }
-
-        if (FD_ISSET(sockfd, &rfds)) {
-            std::uint32_t scl;
-            auto readSize = recvfrom(sockfd, buf.data(), dataSize, 0, reinterpret_cast<sockaddr*>(&sockaddrClient), &scl);
-            if (readSize <= 0) {
-                continue;
+            if (events[index].data.fd == sockfd) {
+                std::uint32_t scl;
+                auto readSize = recvfrom(sockfd, buf.data(), dataSize, 0, reinterpret_cast<sockaddr*>(&sockaddrClient), &scl);
+                if (readSize <= 0) {
+                    continue;
+                }
+                write(tunfd, buf.data(), readSize);
             }
-            std::cout << "write" << readSize << std::endl;
-            write(tunfd, buf.data(), readSize);
         }
     }
 }
