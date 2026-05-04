@@ -10,7 +10,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include <atomic>
 #include <condition_variable>
 #include <cstring>
 #include <memory>
@@ -25,30 +24,32 @@ using TBuffer = std::vector<std::uint8_t>;
 struct TContext {
 public:
     void TunnelWait() {
-        std::unique_lock<std::recursive_mutex> ulock{TunnelMutex};
-        TunnelCv.wait(ulock, [this] { return TunnelReady.load(); });
-        TunnelReady = false;
+        std::unique_lock<std::mutex> ulock{TunnelMutex};
+        TunnelCv.wait(ulock, [this] { return TunnelReady > 0; });
+        --TunnelReady;
     }
     void SocketWait() {
-        std::unique_lock<std::recursive_mutex> ulock{SocketMutex};
-        SocketCv.wait(ulock, [this] { return SocketReady.load(); });
-        SocketReady = false;
+        std::unique_lock<std::mutex> ulock{SocketMutex};
+        SocketCv.wait(ulock, [this] { return SocketReady > 0; });
+        --SocketReady;
     }
     void TunnelNotify() {
-        TunnelReady = true;
+        std::unique_lock<std::mutex> ulock{TunnelMutex};
+        ++TunnelReady;
         TunnelCv.notify_one();
     }
     void SocketNotify() {
-        SocketReady = true;
+        std::unique_lock<std::mutex> ulock{SocketMutex};
+        ++SocketReady;
         SocketCv.notify_one();
     }
 private:
-    std::recursive_mutex TunnelMutex;
-    std::recursive_mutex SocketMutex;
-    std::condition_variable_any TunnelCv;
-    std::condition_variable_any SocketCv;
-    std::atomic<bool> TunnelReady = false;
-    std::atomic<bool> SocketReady = false;
+    std::mutex TunnelMutex;
+    std::mutex SocketMutex;
+    std::condition_variable TunnelCv;
+    std::condition_variable SocketCv;
+    std::size_t TunnelReady = 0;
+    std::size_t SocketReady = 0;
 };
 
 using TContextPtr = std::shared_ptr<TContext>;
@@ -59,7 +60,9 @@ public:
         close(Fd);
     }
 
-    TTunnel(std::size_t maxBufferSize) : MaxBufferSize(maxBufferSize) { }
+    TTunnel(std::size_t maxBufferSize)
+    : MaxBufferSize(maxBufferSize)
+    , Buffer(MaxBufferSize, 0) { }
 
     std::int32_t Init(std::string deviceName) {
         if(Fd = open("/dev/net/tun", O_RDWR); Fd < 0) {
@@ -81,39 +84,43 @@ public:
         return 0;
     }
 
-    std::int32_t Write(TBuffer buffer) const {
+    void Write(const TBuffer& buffer, std::size_t size) const {
         if (Fd < 0) {
-            return 0;
+            return;
         }
 
-        if (buffer.empty()) {
-            return 0;
+        if (size == 0) {
+            return;
         }
-        return write(Fd, buffer.data(), buffer.size());
+        write(Fd, buffer.data(), size);
     }
 
-    TBuffer Read() const {
+    std::size_t Read() {
         if (Fd < 0) {
-            return {};
+            return 0;
         }
 
-        TBuffer buffer(MaxBufferSize, 0);
-        auto readSize = read(Fd, buffer.data(), buffer.size());
+        auto readSize = read(Fd, Buffer.data(), MaxBufferSize);
 
         if (readSize <= 0) {
-            return {};
+            return 0;
         }
 
-        buffer.resize(readSize);
-        return buffer;
+        return readSize;
     }
 
-    bool IsFd(std::int32_t fd) {
+    const TBuffer& getBuffer() const {
+        return Buffer;
+    }
+
+    bool IsFd(std::int32_t fd) const {
         return Fd == fd;
     }
+
 private:
     std::int32_t Fd = -1;
     std::size_t MaxBufferSize = 0;
+    TBuffer Buffer;
     friend class TEpoll;
 };
 
@@ -125,7 +132,9 @@ public:
         close(Fd);
     }
 
-    TSocket(std::size_t maxBufferSize) : MaxBufferSize(maxBufferSize) { }
+    TSocket(std::size_t maxBufferSize)
+    : MaxBufferSize(maxBufferSize)
+    , Buffer(MaxBufferSize, 0) { }
 
     std::int32_t Init(
         std::string localHost,
@@ -169,40 +178,44 @@ public:
         return 0;
     }
 
-    std::int32_t Write(TBuffer buffer) const {
+    void Write(const TBuffer& buffer, std::size_t size) const {
         if (Fd < 0) {
-            return 0;
+            return;
         }
 
-        if (buffer.empty()) {
-            return 0;
+        if (size == 0) {
+            return;
         }
-        return sendto(Fd, buffer.data(), buffer.size(), 0,
+        sendto(Fd, buffer.data(), size, 0,
             reinterpret_cast<const sockaddr*>(&SockaddrServer), sizeof(SockaddrServer));
     }
 
-    TBuffer Read() const {
+    std::size_t Read() {
         if (Fd < 0) {
-            return {};
+            return 0;
         }
 
-        TBuffer buffer(MaxBufferSize, 0);
-        auto readSize = recv(Fd, buffer.data(), MaxBufferSize, 0);
+        auto readSize = recv(Fd, Buffer.data(), MaxBufferSize, 0);
 
         if (readSize <= 0) {
-            return {};
+            return 0;
         }
 
-        buffer.resize(readSize);
-        return buffer;
+        return readSize;
     }
 
-    bool IsFd(std::int32_t fd) {
+    const TBuffer& getBuffer() const {
+        return Buffer;
+    }
+
+    bool IsFd(std::int32_t fd) const {
         return Fd == fd;
     }
+
 private:
     std::int32_t Fd = -1;
     std::size_t MaxBufferSize = 0;
+    TBuffer Buffer;
     sockaddr_in SockaddrServer;
     friend class TEpoll;
 };
@@ -265,16 +278,16 @@ using TEpollPtr = std::shared_ptr<TEpoll>;
 void readTunnel(TContextPtr ctx, TTunnelPtr tunnel, TSocketPtr socket) {
     while(true) {
         ctx->TunnelWait();
-        auto buffer = tunnel->Read();
-        socket->Write(std::move(buffer));
+        auto readSize = tunnel->Read();
+        socket->Write(tunnel->getBuffer(), readSize);
     }
 }
 
 void readSocket(TContextPtr ctx, TTunnelPtr tunnel, TSocketPtr socket) {
     while(true) {
         ctx->SocketWait();
-        auto buffer = socket->Read();
-        tunnel->Write(std::move(buffer));
+        auto readSize = socket->Read();
+        tunnel->Write(socket->getBuffer(), readSize);
     }
 }
 
@@ -284,8 +297,8 @@ int main() {
     std::string localHost = "0.0.0.0";
     std::uint16_t remotePort = 1234;
     std::uint16_t localPort = 1234;
-    std::size_t dataSize = 1400;
-    std::size_t maxEvents = 10;
+    std::size_t dataSize = 1500;
+    std::size_t maxEvents = 2;
 
     auto tunnel = std::make_shared<TTunnel>(dataSize);
 
@@ -318,7 +331,7 @@ int main() {
 
     while(true) {
         auto numberFd = epoll->Wait();
-        if (numberFd <=0) {
+        if (numberFd <= 0) {
             continue;
         }
         const auto& events = epoll->GetEvents();
