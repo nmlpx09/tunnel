@@ -23,20 +23,20 @@ using TBuffer = std::vector<std::uint8_t>;
 
 struct TContext {
 public:
-    void TunnelWait() {
-        std::unique_lock<std::mutex> ulock{TunnelMutex};
-        TunnelCv.wait(ulock, [this] { return TunnelReady > 0; });
-        --TunnelReady;
+    void TunWait() {
+        std::unique_lock<std::mutex> ulock{TunMutex};
+        TunCv.wait(ulock, [this] { return TunReady > 0; });
+        --TunReady;
     }
     void SocketWait() {
         std::unique_lock<std::mutex> ulock{SocketMutex};
         SocketCv.wait(ulock, [this] { return SocketReady > 0; });
         --SocketReady;
     }
-    void TunnelNotify() {
-        std::unique_lock<std::mutex> ulock{TunnelMutex};
-        ++TunnelReady;
-        TunnelCv.notify_one();
+    void TunNotify() {
+        std::unique_lock<std::mutex> ulock{TunMutex};
+        ++TunReady;
+        TunCv.notify_one();
     }
     void SocketNotify() {
         std::unique_lock<std::mutex> ulock{SocketMutex};
@@ -44,23 +44,23 @@ public:
         SocketCv.notify_one();
     }
 private:
-    std::mutex TunnelMutex;
+    std::mutex TunMutex;
     std::mutex SocketMutex;
-    std::condition_variable TunnelCv;
+    std::condition_variable TunCv;
     std::condition_variable SocketCv;
-    std::size_t TunnelReady = 0;
+    std::size_t TunReady = 0;
     std::size_t SocketReady = 0;
 };
 
 using TContextPtr = std::shared_ptr<TContext>;
 
-struct TTunnel {
+struct TTun {
 public:
-    ~TTunnel() {
+    ~TTun() {
         close(Fd);
     }
 
-    TTunnel(std::size_t maxBufferSize)
+    TTun(std::size_t maxBufferSize)
     : MaxBufferSize(maxBufferSize)
     , Buffer(MaxBufferSize, 0) { }
 
@@ -124,7 +124,7 @@ private:
     friend class TEpoll;
 };
 
-using TTunnelPtr = std::shared_ptr<TTunnel>;
+using TTunPtr = std::shared_ptr<TTun>;
 
 struct TSocket {
 public:
@@ -138,9 +138,7 @@ public:
 
     std::int32_t Init(
         std::string localHost,
-        std::uint16_t localPort,
-        std::string remoteHost,
-        std::uint16_t remotePort
+        std::uint16_t localPort
     ) {
         if (Fd = socket(AF_INET, SOCK_DGRAM, 0); Fd < 0) {
             return -1;
@@ -166,7 +164,24 @@ public:
             return -1;
         }
 
-        SockaddrServer = sockaddr_in {
+        return 0;
+    }
+
+    void Write(
+        const TBuffer& buffer,
+        std::size_t size,
+        const std::string& remoteHost,
+        std::uint16_t remotePort
+    ) const {
+        if (Fd < 0) {
+            return;
+        }
+
+        if (size == 0) {
+            return;
+        }
+
+        auto sockaddrRemote = sockaddr_in {
             .sin_family = AF_INET,
             .sin_port = htons(remotePort),
             .sin_addr = {
@@ -175,33 +190,25 @@ public:
             .sin_zero = {0}
         };
 
-        return 0;
-    }
-
-    void Write(const TBuffer& buffer, std::size_t size) const {
-        if (Fd < 0) {
-            return;
-        }
-
-        if (size == 0) {
-            return;
-        }
         sendto(Fd, buffer.data(), size, 0,
-            reinterpret_cast<const sockaddr*>(&SockaddrServer), sizeof(SockaddrServer));
+            reinterpret_cast<const sockaddr*>(&sockaddrRemote), sizeof(sockaddrRemote));
     }
 
-    std::size_t Read() {
+    std::tuple<std::size_t, std::string, std::uint16_t> Read() {
         if (Fd < 0) {
-            return 0;
+            return {0, {}, 0};
         }
 
-        auto readSize = recv(Fd, Buffer.data(), MaxBufferSize, 0);
+        sockaddr_in sockaddrRemote;
+        std::uint32_t sockaddrSize;
+
+        auto readSize = recvfrom(Fd, Buffer.data(), MaxBufferSize, 0, reinterpret_cast<sockaddr*>(&sockaddrRemote), &sockaddrSize);
 
         if (readSize <= 0) {
-            return 0;
+            return {0, {}, 0};
         }
 
-        return readSize;
+        return {readSize, inet_ntoa(sockaddrRemote.sin_addr), htons(sockaddrRemote.sin_port)};
     }
 
     const TBuffer& getBuffer() const {
@@ -216,7 +223,6 @@ private:
     std::int32_t Fd = -1;
     std::size_t MaxBufferSize = 0;
     TBuffer Buffer;
-    sockaddr_in SockaddrServer;
     friend class TEpoll;
 };
 
@@ -275,24 +281,51 @@ private:
 
 using TEpollPtr = std::shared_ptr<TEpoll>;
 
-void readTunnel(TContextPtr ctx, TTunnelPtr tunnel, TSocketPtr socket) {
+bool isValidIpData(const TBuffer& buffer) {
+    return buffer[0] == 0
+        && buffer[1] == 0
+        && buffer[2] == 8
+        && buffer[3] == 0;
+}
+
+void readTun(
+    TContextPtr ctx,
+    TTunPtr tun,
+    TSocketPtr socket,
+    std::string remoteHost,
+    std::uint16_t remotePort
+) {
     while(true) {
-        ctx->TunnelWait();
-        auto readSize = tunnel->Read();
-        socket->Write(tunnel->getBuffer(), readSize);
+        ctx->TunWait();
+        auto size = tun->Read();
+        const auto& buffer = tun->getBuffer();
+        if (size == 0 || !isValidIpData(buffer)) {
+            continue;
+        }
+        socket->Write(buffer, size, remoteHost, remotePort);
     }
 }
 
-void readSocket(TContextPtr ctx, TTunnelPtr tunnel, TSocketPtr socket) {
+void readSocket(
+    TContextPtr ctx,
+    TTunPtr tun,
+    TSocketPtr socket,
+    std::string remoteHost,
+    std::uint16_t remotePort
+) {
     while(true) {
         ctx->SocketWait();
-        auto readSize = socket->Read();
-        tunnel->Write(socket->getBuffer(), readSize);
+        auto [size, host, port] = socket->Read();
+        const auto& buffer = socket->getBuffer();
+        if (size == 0 || remoteHost != host || port != remotePort || !isValidIpData(buffer)) {
+            continue;
+        }
+        tun->Write(buffer, size);
     }
 }
 
 int main() {
-    std::string tun = "tun0";
+    std::string tunDevice = "tun0";
     std::string remoteHost = "77.91.92.110";
     std::string localHost = "0.0.0.0";
     std::uint16_t remotePort = 1234;
@@ -300,16 +333,16 @@ int main() {
     std::size_t dataSize = 1500;
     std::size_t maxEvents = 2;
 
-    auto tunnel = std::make_shared<TTunnel>(dataSize);
+    auto tun = std::make_shared<TTun>(dataSize);
 
-    if(auto ret = tunnel->Init(tun); ret < 0) {
+    if(auto ret = tun->Init(tunDevice); ret < 0) {
         std::cerr << "failed tunnel init:" << strerror(errno) << std::endl;
         return 1;
     }
 
     auto socket = std::make_shared<TSocket>(dataSize);
 
-    if(auto ret = socket->Init(localHost, localPort, remoteHost, remotePort); ret < 0) {
+    if(auto ret = socket->Init(localHost, localPort); ret < 0) {
         std::cerr << "failed socket init:" << strerror(errno) << std::endl;
         return 1;
     }
@@ -321,13 +354,13 @@ int main() {
         return 1;
     }
 
-    epoll->Add(tunnel);
+    epoll->Add(tun);
     epoll->Add(socket);
 
     auto ctx = std::make_shared<TContext>();
 
-    std::thread tTunnel(readTunnel, ctx, tunnel, socket);
-    std::thread tSocket(readSocket, ctx, tunnel, socket);
+    std::thread tTun(readTun, ctx, tun, socket, remoteHost, remotePort);
+    std::thread tSocket(readSocket, ctx, tun, socket, remoteHost, remotePort);
 
     while(true) {
         auto numberFd = epoll->Wait();
@@ -337,8 +370,8 @@ int main() {
         const auto& events = epoll->GetEvents();
 
         for (std::size_t index = 0; index < numberFd; ++index) {
-            if (tunnel->IsFd(events[index].data.fd)) {
-                ctx->TunnelNotify();
+            if (tun->IsFd(events[index].data.fd)) {
+                ctx->TunNotify();
             }
             if (socket->IsFd(events[index].data.fd)) {
                 ctx->SocketNotify();
