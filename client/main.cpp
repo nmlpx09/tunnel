@@ -282,10 +282,7 @@ private:
 using TEpollPtr = std::shared_ptr<TEpoll>;
 
 bool isValidIpData(const TBuffer& buffer) {
-    return buffer[0] == 0
-        && buffer[1] == 0
-        && buffer[2] == 8
-        && buffer[3] == 0;
+    return *reinterpret_cast<const std::uint32_t*>(buffer.data()) == 0x80000;
 }
 
 void readTun(
@@ -299,7 +296,7 @@ void readTun(
         ctx->TunWait();
         auto size = tun->Read();
         const auto& buffer = tun->getBuffer();
-        if (size == 0 || !isValidIpData(buffer)) {
+        if (size < 4 || !isValidIpData(buffer)) {
             continue;
         }
         socket->Write(buffer, size, remoteHost, remotePort);
@@ -317,7 +314,7 @@ void readSocket(
         ctx->SocketWait();
         auto [size, host, port] = socket->Read();
         const auto& buffer = socket->getBuffer();
-        if (size == 0 || remoteHost != host || port != remotePort || !isValidIpData(buffer)) {
+        if (size < 4 || remoteHost != host || port != remotePort || !isValidIpData(buffer)) {
             continue;
         }
         tun->Write(buffer, size);
