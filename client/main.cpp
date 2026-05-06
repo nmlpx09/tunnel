@@ -4,7 +4,6 @@
 #include <linux/if.h>
 #include <linux/if_tun.h>
 #include <sys/epoll.h>
-#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
@@ -42,6 +41,14 @@ public:
         std::unique_lock<std::mutex> ulock{SocketMutex};
         ++SocketReady;
         SocketCv.notify_one();
+    }
+    void TunReset() {
+        std::unique_lock<std::mutex> ulock{TunMutex};
+        TunReady = 0;
+    }
+    void SocketReset() {
+        std::unique_lock<std::mutex> ulock{SocketMutex};
+        SocketReady = 0;
     }
 private:
     std::mutex TunMutex;
@@ -266,7 +273,7 @@ public:
     }
 
     std::size_t Wait() {
-        return epoll_wait(Fd, &Events[0], MaxEvents, -1);
+        return epoll_wait(Fd, Events.data(), MaxEvents, -1);
     }
 
     const TEvents& GetEvents() const {
@@ -281,7 +288,10 @@ private:
 
 using TEpollPtr = std::shared_ptr<TEpoll>;
 
-bool isValidIpData(const TBuffer& buffer) {
+bool validIpDatagram(const TBuffer& buffer, std::size_t size) {
+    if (size < 20) {
+        return false;
+    }
     return *reinterpret_cast<const std::uint32_t*>(buffer.data()) == 0x80000;
 }
 
@@ -294,9 +304,12 @@ void readTun(
 ) {
     while(true) {
         ctx->TunWait();
-        auto size = tun->Read();
+        const auto size = tun->Read();
         const auto& buffer = tun->getBuffer();
-        if (size < 4 || !isValidIpData(buffer)) {
+        if (size == 0) {
+            ctx->TunReset();
+            continue;
+        } else if (!validIpDatagram(buffer, size)) {
             continue;
         }
         socket->Write(buffer, size, remoteHost, remotePort);
@@ -312,9 +325,12 @@ void readSocket(
 ) {
     while(true) {
         ctx->SocketWait();
-        auto [size, host, port] = socket->Read();
+        const auto [size, host, port] = socket->Read();
         const auto& buffer = socket->getBuffer();
-        if (size < 4 || remoteHost != host || port != remotePort || !isValidIpData(buffer)) {
+        if (size == 0) {
+            ctx->SocketReset();
+            continue;
+        } else if (remoteHost != host || port != remotePort || !validIpDatagram(buffer, size)) {
             continue;
         }
         tun->Write(buffer, size);
