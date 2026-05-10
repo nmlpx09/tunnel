@@ -27,7 +27,7 @@ std::int32_t TTun::Init(std::string deviceName) noexcept {
     ifreq ifr;
     std::memset(&ifr, 0, sizeof(ifr));
     ifr.ifr_flags = IFF_TUN;
-    std::strncpy(ifr.ifr_name, deviceName.c_str(), IFNAMSIZ);
+    std::strncpy(ifr.ifr_name, deviceName.c_str(), deviceName.size());
 
     if (auto ret = ioctl(Fd, TUNSETIFF, &ifr); ret < 0) {
         return -1;

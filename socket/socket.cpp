@@ -80,7 +80,7 @@ std::tuple<std::size_t, std::string, std::uint16_t> TSocket::Read() noexcept {
     }
 
     sockaddr_in sockaddrRemote;
-    std::uint32_t sockaddrSize = 0;
+    std::uint32_t sockaddrSize;
 
     const auto readSize = recvfrom(Fd, Buffer.data(), MaxBufferSize, 0, reinterpret_cast<sockaddr*>(&sockaddrRemote), &sockaddrSize);
 

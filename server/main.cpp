@@ -1,123 +1,115 @@
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <linux/if.h>
-#include <linux/if_tun.h>
-#include <sys/epoll.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <string.h>
+#include <context/context.h>
+#include <common/types.h>
+#include <common/utils.h>
+#include <epoll/epoll.h>
+#include <ips_storage/ips_storage.h>
+#include <socket/socket.h>
+#include <tun/tun.h>
 
-
+#include <cstdint>
+#include <cstring>
 #include <iostream>
+#include <memory>
 #include <string>
-#include <vector>
+#include <thread>
 
-
-int main() {
-    std::string tun = "tun0";
-    std::string localHost = "0.0.0.0";
-    std::uint16_t localPort = 1234;
-    std::size_t dataSize = 1400;
-    std::vector<std::uint8_t> buf(dataSize, 0);
-    sockaddr_in sockaddrServer, sockaddrClient;
-    ifreq ifr;
-    epoll_event events[2];
-
-    std::int32_t tunfd = -1, sockfd = -1, epollfd = -1;
-
-    if(tunfd = open("/dev/net/tun", O_RDWR); tunfd < 0) {
-        std::cerr << "failed open tun\n";
-        return 1;
-    }
-
-    memset(&ifr, 0, sizeof(ifr));
-    ifr.ifr_flags = IFF_TUN;
-    strncpy(ifr.ifr_name, tun.c_str(), IFNAMSIZ);
-
-    if (auto err = ioctl(tunfd, TUNSETIFF, (void*)&ifr); err == -1) {
-        std::cerr << "failed ioctl TUNSETIFF\n"; 
-        close(tunfd);
-        return 1;
-    }
-
-    if (sockfd = socket(AF_INET, SOCK_DGRAM, 0); sockfd < 0) {
-        std::cerr << "failed open tun\n";
-        close(tunfd);
-        return 1;
-    }
-
-    sockaddrServer = sockaddr_in {
-        .sin_family = AF_INET,
-        .sin_port = htons(localPort),
-        .sin_addr = {
-            .s_addr = inet_addr(localHost.c_str())
-        },
-        .sin_zero = {0}
-    };
-
-    if (auto br = bind(sockfd, reinterpret_cast<const sockaddr*>(&sockaddrServer), sizeof(sockaddrServer)); br < 0) {
-        std::cerr << "failed bind socket\n";
-        close(tunfd);
-        close(sockfd);
-        return 1;
-    }
-
-    fcntl(sockfd, F_SETFL, O_NONBLOCK);
-    fcntl(tunfd, F_SETFL, O_NONBLOCK);
-
-    if (epollfd = epoll_create1(0); epollfd < 0) {
-        std::cerr << "failed epoll create\n";
-        close(tunfd);
-        close(sockfd);
-        return 1;
-    }
-
-    epoll_event event;
-
-    event.events = EPOLLIN;
-    event.data.fd = sockfd;
-    if (auto err = epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &event); err < 0) {
-        std::cerr << "failed epoll create\n";
-        close(tunfd);
-        close(sockfd);
-        close(epollfd);
-        return 1;
-    }
-
-    event.events = EPOLLIN;
-    event.data.fd = tunfd;
-    if (auto err = epoll_ctl(epollfd, EPOLL_CTL_ADD, tunfd, &event); err < 0) {
-        std::cerr << "failed epoll create\n";
-        close(tunfd);
-        close(sockfd);
-        close(epollfd);
-        return 1;
-    }
-
-    for(;;) {
-        auto nfds = epoll_wait(epollfd, events, 2, -1);
-        if (nfds == -1) {
-            std::cerr << "failed epoll wait\n";
+void readTun(
+    NContext::TContextPtr ctx,
+    NTun::TTunPtr tun,
+    NSocket::TSocketPtr socket,
+    NIpsStorage::TIpsStoragePtr ipsStorage
+) {
+    while(true) {
+        ctx->TunWait();
+        const auto size = tun->Read();
+        const auto& buffer = tun->GetBuffer();
+        if (size == 0) {
+            ctx->TunReset();
+            continue;
+        } else if (!NUtils::validIpDatagram(buffer, size)) {
             continue;
         }
 
-        for (auto index = 0; index < nfds; ++index) {
-            if (events[index].data.fd == tunfd) {
-                auto readSize = read(tunfd, buf.data(), dataSize);
-                if (readSize <= 0) {
-                    continue;
-                }
-                sendto(sockfd, buf.data(), readSize, 0, reinterpret_cast<const sockaddr*>(&sockaddrClient), sizeof(sockaddrClient));
+        if (const auto value = ipsStorage->Get(NUtils::getDstIp(buffer)); value) {
+            socket->Write(buffer, size, value->first, value->second);
+        }
+    }
+}
+
+void readSocket(
+    NContext::TContextPtr ctx,
+    NTun::TTunPtr tun,
+    NSocket::TSocketPtr socket,
+    NIpsStorage::TIpsStoragePtr ipsStorage
+) {
+    while(true) {
+        ctx->SocketWait();
+        const auto [size, host, port] = socket->Read();
+        const auto& buffer = socket->GetBuffer();
+        if (size == 0) {
+            ctx->SocketReset();
+            continue;
+        } else if (!NUtils::validIpDatagram(buffer, size)) {
+            continue;
+        }
+
+        ipsStorage->Add(NUtils::getSrcIp(buffer), host, port);
+
+        tun->Write(buffer, size);
+    }
+}
+
+int main() {
+    std::string tunDevice = "tun0";
+    std::string localHost = "0.0.0.0";
+    std::uint16_t localPort = 1234;
+    std::size_t dataSize = 1500;
+    std::size_t maxEvents = 2;
+
+    auto tun = std::make_shared<NTun::TTun>(dataSize);
+
+    if(auto ret = tun->Init(tunDevice); ret < 0) {
+        std::cerr << "failed tunnel init:" << strerror(errno) << std::endl;
+        return 1;
+    }
+
+    auto socket = std::make_shared<NSocket::TSocket>(dataSize);
+
+    if(auto ret = socket->Init(localHost, localPort); ret < 0) {
+        std::cerr << "failed socket init:" << strerror(errno) << std::endl;
+        return 1;
+    }
+
+    auto epoll = std::make_shared<NEpoll::TEpoll>(maxEvents);
+
+    if(auto ret = epoll->Init(); ret < 0) {
+        std::cerr << "failed epoll init:" << strerror(errno) << std::endl;
+        return 1;
+    }
+
+    epoll->Add(tun);
+    epoll->Add(socket);
+
+    auto ctx = std::make_shared<NContext::TContext>();
+
+    auto ipsStorage = std::make_shared<NIpsStorage::TIpsStorage>();
+
+    std::thread tTun(readTun, ctx, tun, socket, ipsStorage);
+    std::thread tSocket(readSocket, ctx, tun, socket, ipsStorage);
+
+    while(true) {
+        auto numberFd = epoll->Wait();
+        if (numberFd <= 0) {
+            continue;
+        }
+        const auto& events = epoll->GetEvents();
+
+        for (std::size_t index = 0; index < numberFd; ++index) {
+            if (tun->IsFd(events[index].data.fd)) {
+                ctx->TunNotify();
             }
-            if (events[index].data.fd == sockfd) {
-                std::uint32_t scl;
-                auto readSize = recvfrom(sockfd, buf.data(), dataSize, 0, reinterpret_cast<sockaddr*>(&sockaddrClient), &scl);
-                if (readSize <= 0) {
-                    continue;
-                }
-                write(tunfd, buf.data(), readSize);
+            if (socket->IsFd(events[index].data.fd)) {
+                ctx->SocketNotify();
             }
         }
     }

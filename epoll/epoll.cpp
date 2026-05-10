@@ -1,5 +1,7 @@
 #include "epoll.h"
 
+#include <unistd.h>
+
 namespace NEpoll {
 
 TEpoll::~TEpoll() {
