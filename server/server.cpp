@@ -22,8 +22,7 @@ void readTun(
 ) {
     while(true) {
         ctx->TunWait();
-        const auto size = tun->Read();
-        const auto& buffer = tun->GetBuffer();
+        const auto& [size, buffer] = tun->Read();
         if (size == 0) {
             ctx->TunReset();
             continue;
@@ -45,8 +44,7 @@ void readSocket(
 ) {
     while(true) {
         ctx->SocketWait();
-        const auto [size, ip, port] = socket->Read();
-        const auto& buffer = socket->GetBuffer();
+        const auto& [size, ip, port, buffer] = socket->Read();
         if (size == 0) {
             ctx->SocketReset();
             continue;

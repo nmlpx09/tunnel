@@ -4,8 +4,10 @@
 #include <epoll/epoll.h>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
+#include <tuple>
 
 namespace NTun {
 
@@ -22,9 +24,10 @@ public:
 
     void Write(const TBuffer& buffer, std::size_t size) const noexcept;
 
-    std::size_t Read() noexcept;
-
-    const TBuffer& GetBuffer() const noexcept;
+    std::tuple<
+        std::size_t,
+        std::reference_wrapper<const TBuffer>
+    > Read() noexcept;
 
     bool IsFd(std::int32_t fd) const noexcept;
 

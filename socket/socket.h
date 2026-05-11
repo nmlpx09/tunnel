@@ -4,6 +4,7 @@
 #include <epoll/epoll.h>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -28,9 +29,12 @@ public:
         std::uint16_t remotePort
     ) const noexcept;
 
-    std::tuple<std::size_t, std::string, std::uint16_t> Read() noexcept;
-
-    const TBuffer& GetBuffer() const noexcept;
+    std::tuple<
+        std::size_t,
+        std::string,
+        std::uint16_t,
+        std::reference_wrapper<const TBuffer>
+    > Read() noexcept;
 
     bool IsFd(std::int32_t fd) const noexcept;
 

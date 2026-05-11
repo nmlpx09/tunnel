@@ -74,9 +74,14 @@ void TSocket::Write(
         reinterpret_cast<const sockaddr*>(&sockaddrRemote), sizeof(sockaddrRemote));
 }
 
-std::tuple<std::size_t, std::string, std::uint16_t> TSocket::Read() noexcept {
+std::tuple<
+    std::size_t,
+    std::string,
+    std::uint16_t,
+    std::reference_wrapper<const TBuffer>
+> TSocket::Read() noexcept {
     if (Fd < 0) {
-        return {0, {}, 0};
+        return {0, {}, 0, cref(Buffer)};
     }
 
     sockaddr_in sockaddrRemote;
@@ -85,14 +90,10 @@ std::tuple<std::size_t, std::string, std::uint16_t> TSocket::Read() noexcept {
     const auto readSize = recvfrom(Fd, Buffer.data(), MaxBufferSize, 0, reinterpret_cast<sockaddr*>(&sockaddrRemote), &sockaddrSize);
 
     if (readSize <= 0 || sockaddrSize <= 0) {
-        return {0, {}, 0};
+        return {0, {}, 0, cref(Buffer)};
     }
 
-    return {readSize, inet_ntoa(sockaddrRemote.sin_addr), htons(sockaddrRemote.sin_port)};
-}
-
-const TBuffer& TSocket::GetBuffer() const noexcept {
-    return Buffer;
+    return {readSize, inet_ntoa(sockaddrRemote.sin_addr), htons(sockaddrRemote.sin_port), cref(Buffer)};
 }
 
 bool TSocket::IsFd(std::int32_t fd) const noexcept {
