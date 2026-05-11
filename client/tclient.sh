@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 BIN_NAME=tclient
 TUN_DEVICE=tun0
@@ -25,7 +25,7 @@ function test_interface {
 }
 
 case $1 in
-    "c")
+    "start")
         test_sudo
         test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE exits" && exit 1
 
@@ -47,7 +47,7 @@ case $1 in
         $BIN_NAME &
         ;;
 
-    "d")
+    "stop")
         test_sudo
         ! test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE not exits" && exit 1
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 BIN_NAME=tserver
 TUN_DEVICE=tun0
@@ -24,7 +24,7 @@ function test_interface {
 }
 
 case $1 in
-    "c")
+    "start")
         test_sudo
         test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE exits" && exit 1
 
@@ -41,10 +41,10 @@ case $1 in
         export LOCAL_PORT=$LOCAL_PORT
         export MTU=$MTU
 
-        $BIN_NAME &
+        nice --15 $BIN_NAME &
         ;;
 
-    "d")
+    "stop")
         test_sudo
         ! test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE not exits" && exit 1
 
