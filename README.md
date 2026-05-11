@@ -9,12 +9,12 @@ simple udp tunnel
 
 # confugure env
 
-TUN_DEVICE - tun device name
-REMOTE_IP - server ip
-REMOTE_PORT - server port
-LOCAL_PORT- client port
-TUN_IP - local tun ip
-MTU - mtu (1480 max)
+TUN_DEVICE - tun device name  
+REMOTE_IP - server ip  
+REMOTE_PORT - server port  
+LOCAL_PORT- client port  
+TUN_IP - local tun ip  
+MTU - mtu (1480 max)  
 
 # command
 
