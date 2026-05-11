@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 BIN_NAME=tclient
 TUN_DEVICE=tun0
@@ -55,7 +55,7 @@ case $1 in
 
         ip route del $REMOTE_IP
 
-        pkill -9 $BIN_NAME
+        pkill -15 $BIN_NAME
         ;;
     *)
 esac

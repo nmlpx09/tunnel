@@ -56,7 +56,6 @@ void readSocket(
 }
 
 int main() {
-
     std::string tunDevice;
     std::string remoteIp;
     std::uint16_t remotePort = 0;
@@ -69,28 +68,28 @@ int main() {
     if(env.count("tunDevice") > 0) {
         tunDevice = env.at("tunDevice");
     } else {
-        std::cerr << "set TUN_DEVICE env" << std::endl;
+        std::cerr << "export TUN_DEVICE env" << std::endl;
         return 1;
     }
 
     if(env.count("remoteIp") > 0) {
         remoteIp = env.at("remoteIp");
     } else {
-        std::cerr << "set REMOTE_IP env" << std::endl;
+        std::cerr << "export REMOTE_IP env" << std::endl;
         return 1;
     }
 
     if(env.count("remotePort") > 0) {
         remotePort = std::stoi(env.at("remotePort"));
     } else {
-        std::cerr << "set REMOTE_PORT env" << std::endl;
+        std::cerr << "export REMOTE_PORT env" << std::endl;
         return 1;
     }
 
     if(env.count("localPort") > 0) {
         localPort = std::stoi(env.at("localPort"));
     } else {
-        std::cerr << "set LOCAL_PORT env" << std::endl;
+        std::cerr << "export LOCAL_PORT env" << std::endl;
         return 1;
     }
 
@@ -101,7 +100,7 @@ int main() {
             return 1;
         }
     } else {
-        std::cerr << "set MTU env" << std::endl;
+        std::cerr << "export MTU env" << std::endl;
         return 1;
     }
 
@@ -135,7 +134,7 @@ int main() {
     std::thread tSocket(readSocket, ctx, tun, socket, remoteIp, remotePort);
 
     while(true) {
-        auto numberFd = epoll->Wait();
+        const auto numberFd = epoll->Wait();
         if (numberFd <= 0) {
             continue;
         }

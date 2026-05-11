@@ -71,14 +71,14 @@ int main() {
     if(env.count("tunDevice") > 0) {
         tunDevice = env.at("tunDevice");
     } else {
-        std::cerr << "set TUN_DEVICE env" << std::endl;
+        std::cerr << "export TUN_DEVICE env" << std::endl;
         return 1;
     }
 
     if(env.count("localPort") > 0) {
         localPort = std::stoi(env.at("localPort"));
     } else {
-        std::cerr << "set LOCAL_PORT env" << std::endl;
+        std::cerr << "export LOCAL_PORT env" << std::endl;
         return 1;
     }
 
@@ -89,7 +89,7 @@ int main() {
             return 1;
         }
     } else {
-        std::cerr << "set MTU env" << std::endl;
+        std::cerr << "export MTU env" << std::endl;
         return 1;
     }
 
@@ -125,7 +125,7 @@ int main() {
     std::thread tSocket(readSocket, ctx, tun, socket, ipsStorage);
 
     while(true) {
-        auto numberFd = epoll->Wait();
+        const auto numberFd = epoll->Wait();
         if (numberFd <= 0) {
             continue;
         }

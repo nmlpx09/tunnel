@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 BIN_NAME=tserver
 TUN_DEVICE=tun0
@@ -52,7 +52,7 @@ case $1 in
 
         iptables -t nat -D POSTROUTING -s $TUN_IP/24 -o $NET_DEVICE -j MASQUERADE
 
-        pkill -9 $BIN_NAME
+        pkill -15 $BIN_NAME
         ;;
     *)
 esac

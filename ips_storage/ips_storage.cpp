@@ -12,7 +12,7 @@ bool TElement::operator ==(const TElement& lhs) const {
 
 void TIpsStorage::Add(std::uint32_t key, std::string ip, std::uint16_t port) noexcept {
     std::unique_lock<std::mutex> ulock{Mutex};
-    auto newElement = TElement{std::move(ip), port};
+    const auto newElement = TElement{std::move(ip), port};
     if (Map.count(key) == 0 || (Map[key] != newElement && std::chrono::steady_clock::now() - Map[key].Timestamp > std::chrono::seconds(10))) {
         Map[key] = newElement;
     }

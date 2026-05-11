@@ -24,7 +24,7 @@ std::int32_t TSocket::Init(
         return -1;
     }
 
-    sockaddr_in sockaddrClient = sockaddr_in {
+    const sockaddr_in sockaddrClient = sockaddr_in {
         .sin_family = AF_INET,
         .sin_port = htons(localPort),
         .sin_addr = {
@@ -61,7 +61,7 @@ void TSocket::Write(
         return;
     }
 
-    auto sockaddrRemote = sockaddr_in {
+    const auto sockaddrRemote = sockaddr_in {
         .sin_family = AF_INET,
         .sin_port = htons(remotePort),
         .sin_addr = {
