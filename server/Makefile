@@ -1,11 +1,11 @@
-CC = g++
-CCFLAGS =-O3 -std=c++20 -pedantic -Wall -W -Werror -Wextra -c -I..
-DEFINES =
+CC=g++
+CCFLAGS=-O3 -std=c++20 -pedantic -Wall -W -Werror -Wextra -c -I..
+DEFINES=
 
-OBJ =main.o ../context/context.o ../common/utils.o ../epoll/epoll.o ../ips_storage/ips_storage.o ../socket/socket.o ../tun/tun.o
+OBJ=server.o ../context/context.o ../common/utils.o ../epoll/epoll.o ../ips_storage/ips_storage.o ../socket/socket.o ../tun/tun.o
 LDFLAGS=-lpthread
 
-RUN = tserver
+RUN=tserver
 
 all: $(OBJ)
 	$(CC) $^ -o $(RUN) $(LDFLAGS)

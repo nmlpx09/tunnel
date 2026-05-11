@@ -1,6 +1,6 @@
 # about
 
-simple udp tunnel without sessions and handshake
+simple udp tunnel without sessions and handshakes
 
 # requirement
 
