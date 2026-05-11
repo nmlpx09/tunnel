@@ -8,7 +8,7 @@ REMOTE_IP=77.91.92.110
 REMOTE_PORT=1234
 LOCAL_PORT=1234
 TUN_IP=10.0.3.2
-MTU=1460
+MTU=1480
 
 function test_sudo {
     if [ `whoami` != root ]; then
