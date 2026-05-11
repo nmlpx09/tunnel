@@ -5,9 +5,9 @@ DEFINES =
 OBJ =main.o ../context/context.o ../common/utils.o ../epoll/epoll.o ../ips_storage/ips_storage.o ../socket/socket.o ../tun/tun.o
 LDFLAGS=-lpthread
 
-RUN = server
+RUN = tserver
 
-server: $(OBJ)
+all: $(OBJ)
 	$(CC) $^ -o $(RUN) $(LDFLAGS)
 
 %.o: %.cpp
@@ -15,3 +15,12 @@ server: $(OBJ)
 
 clean:
 	rm -f $(OBJ) $(RUN)
+
+install:
+	strip $(RUN)
+	cp $(RUN) /usr/bin/
+	cp $(RUN).sh /usr/bin/
+
+uninstall:
+	rm /usr/bin/$(RUN)
+	rm /usr/bin/$(RUN).sh 

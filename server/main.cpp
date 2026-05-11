@@ -1,3 +1,4 @@
+#include <configs.h>
 #include <context/context.h>
 #include <common/types.h>
 #include <common/utils.h>
@@ -44,7 +45,7 @@ void readSocket(
 ) {
     while(true) {
         ctx->SocketWait();
-        const auto [size, host, port] = socket->Read();
+        const auto [size, ip, port] = socket->Read();
         const auto& buffer = socket->GetBuffer();
         if (size == 0) {
             ctx->SocketReset();
@@ -53,34 +54,60 @@ void readSocket(
             continue;
         }
 
-        ipsStorage->Add(NUtils::getSrcIp(buffer), host, port);
+        ipsStorage->Add(NUtils::getSrcIp(buffer), ip, port);
 
         tun->Write(buffer, size);
     }
 }
 
 int main() {
-    std::string tunDevice = "tun0";
-    std::string localHost = "0.0.0.0";
-    std::uint16_t localPort = 1234;
-    std::size_t dataSize = 1500;
-    std::size_t maxEvents = 2;
+    std::string tunDevice;
+    const std::string localIp = "0.0.0.0";
+    std::uint16_t localPort = 0;
+    std::size_t mtu = 0;
 
-    auto tun = std::make_shared<NTun::TTun>(dataSize);
+    const auto env = NUtils::getEnv();
+
+    if(env.count("tunDevice") > 0) {
+        tunDevice = env.at("tunDevice");
+    } else {
+        std::cerr << "set TUN_DEVICE env" << std::endl;
+        return 1;
+    }
+
+    if(env.count("localPort") > 0) {
+        localPort = std::stoi(env.at("localPort"));
+    } else {
+        std::cerr << "set LOCAL_PORT env" << std::endl;
+        return 1;
+    }
+
+    if(env.count("mtu") > 0) {
+        mtu = std::stoi(env.at("mtu"));
+        if (mtu > MAX_MTU_SIZE) {
+            std::cerr << "mtu must less then MAX_MTU_SIZE" << std::endl;
+            return 1;
+        }
+    } else {
+        std::cerr << "set MTU env" << std::endl;
+        return 1;
+    }
+
+    auto tun = std::make_shared<NTun::TTun>(MAX_DATA_SIZE);
 
     if(auto ret = tun->Init(tunDevice); ret < 0) {
         std::cerr << "failed tunnel init:" << strerror(errno) << std::endl;
         return 1;
     }
 
-    auto socket = std::make_shared<NSocket::TSocket>(dataSize);
+    auto socket = std::make_shared<NSocket::TSocket>(MAX_DATA_SIZE);
 
-    if(auto ret = socket->Init(localHost, localPort); ret < 0) {
+    if(auto ret = socket->Init(localIp, localPort); ret < 0) {
         std::cerr << "failed socket init:" << strerror(errno) << std::endl;
         return 1;
     }
 
-    auto epoll = std::make_shared<NEpoll::TEpoll>(maxEvents);
+    auto epoll = std::make_shared<NEpoll::TEpoll>(MAX_EVENTS);
 
     if(auto ret = epoll->Init(); ret < 0) {
         std::cerr << "failed epoll init:" << strerror(errno) << std::endl;

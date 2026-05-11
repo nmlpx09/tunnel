@@ -1,3 +1,4 @@
+#include <configs.h>
 #include <context/context.h>
 #include <common/types.h>
 #include <common/utils.h>
@@ -16,7 +17,7 @@ void readTun(
     NContext::TContextPtr ctx,
     NTun::TTunPtr tun,
     NSocket::TSocketPtr socket,
-    std::string remoteHost,
+    std::string remoteIp,
     std::uint16_t remotePort
 ) {
     while(true) {
@@ -29,7 +30,7 @@ void readTun(
         } else if (!NUtils::validIpDatagram(buffer, size)) {
             continue;
         }
-        socket->Write(buffer, size, remoteHost, remotePort);
+        socket->Write(buffer, size, remoteIp, remotePort);
     }
 }
 
@@ -37,17 +38,17 @@ void readSocket(
     NContext::TContextPtr ctx,
     NTun::TTunPtr tun,
     NSocket::TSocketPtr socket,
-    std::string remoteHost,
+    std::string remoteIp,
     std::uint16_t remotePort
 ) {
     while(true) {
         ctx->SocketWait();
-        const auto [size, host, port] = socket->Read();
+        const auto [size, ip, port] = socket->Read();
         const auto& buffer = socket->GetBuffer();
         if (size == 0) {
             ctx->SocketReset();
             continue;
-        } else if (remoteHost != host || port != remotePort || !NUtils::validIpDatagram(buffer, size)) {
+        } else if (remoteIp != ip || port != remotePort || !NUtils::validIpDatagram(buffer, size)) {
             continue;
         }
         tun->Write(buffer, size);
@@ -55,29 +56,70 @@ void readSocket(
 }
 
 int main() {
-    std::string tunDevice = "tun0";
-    std::string remoteHost = "77.91.92.110";
-    std::string localHost = "0.0.0.0";
-    std::uint16_t remotePort = 1234;
-    std::uint16_t localPort = 1234;
-    std::size_t dataSize = 1500;
-    std::size_t maxEvents = 2;
 
-    auto tun = std::make_shared<NTun::TTun>(dataSize);
+    std::string tunDevice;
+    std::string remoteIp;
+    std::uint16_t remotePort = 0;
+    const std::string localIp = "0.0.0.0";
+    std::uint16_t localPort = 0;
+    std::size_t mtu = 0;
+
+    const auto env = NUtils::getEnv();
+
+    if(env.count("tunDevice") > 0) {
+        tunDevice = env.at("tunDevice");
+    } else {
+        std::cerr << "set TUN_DEVICE env" << std::endl;
+        return 1;
+    }
+
+    if(env.count("remoteIp") > 0) {
+        remoteIp = env.at("remoteIp");
+    } else {
+        std::cerr << "set REMOTE_IP env" << std::endl;
+        return 1;
+    }
+
+    if(env.count("remotePort") > 0) {
+        remotePort = std::stoi(env.at("remotePort"));
+    } else {
+        std::cerr << "set REMOTE_PORT env" << std::endl;
+        return 1;
+    }
+
+    if(env.count("localPort") > 0) {
+        localPort = std::stoi(env.at("localPort"));
+    } else {
+        std::cerr << "set LOCAL_PORT env" << std::endl;
+        return 1;
+    }
+
+    if(env.count("mtu") > 0) {
+        mtu = std::stoi(env.at("mtu"));
+        if (mtu > MAX_MTU_SIZE) {
+            std::cerr << "mtu must less then MAX_MTU_SIZE" << std::endl;
+            return 1;
+        }
+    } else {
+        std::cerr << "set MTU env" << std::endl;
+        return 1;
+    }
+
+    auto tun = std::make_shared<NTun::TTun>(MAX_DATA_SIZE);
 
     if(auto ret = tun->Init(tunDevice); ret < 0) {
         std::cerr << "failed tunnel init:" << strerror(errno) << std::endl;
         return 1;
     }
 
-    auto socket = std::make_shared<NSocket::TSocket>(dataSize);
+    auto socket = std::make_shared<NSocket::TSocket>(MAX_DATA_SIZE);
 
-    if(auto ret = socket->Init(localHost, localPort); ret < 0) {
+    if(auto ret = socket->Init(localIp, localPort); ret < 0) {
         std::cerr << "failed socket init:" << strerror(errno) << std::endl;
         return 1;
     }
 
-    auto epoll = std::make_shared<NEpoll::TEpoll>(maxEvents);
+    auto epoll = std::make_shared<NEpoll::TEpoll>(MAX_EVENTS);
 
     if(auto ret = epoll->Init(); ret < 0) {
         std::cerr << "failed epoll init:" << strerror(errno) << std::endl;
@@ -89,8 +131,8 @@ int main() {
 
     auto ctx = std::make_shared<NContext::TContext>();
 
-    std::thread tTun(readTun, ctx, tun, socket, remoteHost, remotePort);
-    std::thread tSocket(readSocket, ctx, tun, socket, remoteHost, remotePort);
+    std::thread tTun(readTun, ctx, tun, socket, remoteIp, remotePort);
+    std::thread tSocket(readSocket, ctx, tun, socket, remoteIp, remotePort);
 
     while(true) {
         auto numberFd = epoll->Wait();

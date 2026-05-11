@@ -2,13 +2,16 @@
 
 set -ex
 
+BIN_NAME=tclient
 TUN_DEVICE=tun0
 REMOTE_IP=77.91.92.110
+REMOTE_PORT=1234
+LOCAL_PORT=1234
 TUN_IP=10.0.3.2
-MTU=1400
+MTU=1460
 
 function test_sudo {
-    if [ `whoami` != root  ]; then
+    if [ `whoami` != root ]; then
         echo "run on sudo"
 
         exit 1
@@ -28,13 +31,20 @@ case $1 in
 
         ip tuntap add mode tun $TUN_DEVICE
         ip address add $TUN_IP/24 dev $TUN_DEVICE
-        ip link set dev $TUN_DEVICE mtu 1400
+        ip link set dev $TUN_DEVICE mtu $MTU
         ip link set dev $TUN_DEVICE up
 
         ip route add $REMOTE_IP $(ip route | grep '^default' | cut -d ' ' -f 2-)
         ip route add 128.0.0.0/1 dev $TUN_DEVICE
         ip route add 0.0.0.0/1 dev $TUN_DEVICE
 
+        export TUN_DEVICE=$TUN_DEVICE
+        export REMOTE_IP=$REMOTE_IP
+        export REMOTE_PORT=$REMOTE_PORT
+        export LOCAL_PORT=$LOCAL_PORT
+        export MTU=$MTU
+
+        $BIN_NAME &
         ;;
 
     "d")
@@ -44,6 +54,8 @@ case $1 in
         ip link delete $TUN_DEVICE
 
         ip route del $REMOTE_IP
+
+        pkill -9 $BIN_NAME
         ;;
     *)
 esac

@@ -17,7 +17,7 @@ TSocket::TSocket(std::size_t maxBufferSize) noexcept
     , Buffer(MaxBufferSize, 0) { }
 
 std::int32_t TSocket::Init(
-    std::string localHost,
+    std::string localIp,
     std::uint16_t localPort
 ) noexcept {
     if (Fd = socket(AF_INET, SOCK_DGRAM, 0); Fd < 0) {
@@ -28,7 +28,7 @@ std::int32_t TSocket::Init(
         .sin_family = AF_INET,
         .sin_port = htons(localPort),
         .sin_addr = {
-            .s_addr = inet_addr(localHost.c_str())
+            .s_addr = inet_addr(localIp.c_str())
         },
         .sin_zero = {0}
     };
@@ -50,7 +50,7 @@ std::int32_t TSocket::Init(
 void TSocket::Write(
     const TBuffer& buffer,
     std::size_t size,
-    const std::string& remoteHost,
+    const std::string& remoteIp,
     std::uint16_t remotePort
 ) const noexcept {
     if (Fd < 0) {
@@ -65,7 +65,7 @@ void TSocket::Write(
         .sin_family = AF_INET,
         .sin_port = htons(remotePort),
         .sin_addr = {
-            .s_addr = inet_addr(remoteHost.c_str())
+            .s_addr = inet_addr(remoteIp.c_str())
         },
         .sin_zero = {0}
     };

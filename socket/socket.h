@@ -19,12 +19,12 @@ public:
     TSocket& operator=(TSocket&&) = delete;
     ~TSocket();
 
-    std::int32_t Init(std::string localHost, std::uint16_t localPort) noexcept;
+    std::int32_t Init(std::string localIp, std::uint16_t localPort) noexcept;
 
     void Write(
         const TBuffer& buffer,
         std::size_t size,
-        const std::string& remoteHost,
+        const std::string& remoteIp,
         std::uint16_t remotePort
     ) const noexcept;
 
