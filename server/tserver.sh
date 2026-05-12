@@ -7,7 +7,7 @@ TUN_DEVICE=tun0
 NET_DEVICE=`ip route | grep '^default' | cut -d ' ' -f 5-`
 LOCAL_PORT=1234
 TUN_IP=10.0.3.1
-MTU=1480
+MTU=1460
 
 function test_sudo {
     if [ `whoami` != root  ]; then

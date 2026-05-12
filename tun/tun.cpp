@@ -51,20 +51,20 @@ void TTun::Write(const TBuffer& buffer, std::size_t size) const noexcept {
 }
 
 std::tuple<
-    std::size_t,
-    std::reference_wrapper<const TBuffer>
+    std::reference_wrapper<const TBuffer>,
+    std::size_t
 > TTun::Read() noexcept {
     if (Fd < 0) {
-        return {0, cref(Buffer)};
+        return {cref(Buffer), 0};
     }
 
     const auto readSize = read(Fd, Buffer.data(), MaxBufferSize);
 
     if (readSize <= 0) {
-        return {0, cref(Buffer)};
+        return {cref(Buffer), 0};
     }
 
-    return {readSize, cref(Buffer)};
+    return {cref(Buffer), readSize};
 }
 
 bool TTun::IsFd(std::int32_t fd) const noexcept {

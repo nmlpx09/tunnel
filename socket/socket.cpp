@@ -75,13 +75,13 @@ void TSocket::Write(
 }
 
 std::tuple<
+    std::reference_wrapper<const TBuffer>,
     std::size_t,
     std::string,
-    std::uint16_t,
-    std::reference_wrapper<const TBuffer>
+    std::uint16_t
 > TSocket::Read() noexcept {
     if (Fd < 0) {
-        return {0, {}, 0, cref(Buffer)};
+        return {cref(Buffer), 0, {}, 0};
     }
 
     sockaddr_in sockaddrRemote;
@@ -90,10 +90,10 @@ std::tuple<
     const auto readSize = recvfrom(Fd, Buffer.data(), MaxBufferSize, 0, reinterpret_cast<sockaddr*>(&sockaddrRemote), &sockaddrSize);
 
     if (readSize <= 0 || sockaddrSize <= 0) {
-        return {0, {}, 0, cref(Buffer)};
+        return {cref(Buffer), 0, {}, 0};
     }
 
-    return {readSize, inet_ntoa(sockaddrRemote.sin_addr), htons(sockaddrRemote.sin_port), cref(Buffer)};
+    return {cref(Buffer), readSize, inet_ntoa(sockaddrRemote.sin_addr), htons(sockaddrRemote.sin_port)};
 }
 
 bool TSocket::IsFd(std::int32_t fd) const noexcept {

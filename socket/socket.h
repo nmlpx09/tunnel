@@ -30,10 +30,10 @@ public:
     ) const noexcept;
 
     std::tuple<
+        std::reference_wrapper<const TBuffer>,
         std::size_t,
         std::string,
-        std::uint16_t,
-        std::reference_wrapper<const TBuffer>
+        std::uint16_t
     > Read() noexcept;
 
     bool IsFd(std::int32_t fd) const noexcept;

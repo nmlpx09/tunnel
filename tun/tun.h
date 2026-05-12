@@ -25,8 +25,8 @@ public:
     void Write(const TBuffer& buffer, std::size_t size) const noexcept;
 
     std::tuple<
-        std::size_t,
-        std::reference_wrapper<const TBuffer>
+        std::reference_wrapper<const TBuffer>,
+        std::size_t
     > Read() noexcept;
 
     bool IsFd(std::int32_t fd) const noexcept;

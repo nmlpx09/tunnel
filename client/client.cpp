@@ -2,6 +2,7 @@
 #include <context/context.h>
 #include <common/types.h>
 #include <common/utils.h>
+#include <crypt/crypt.h>
 #include <epoll/epoll.h>
 #include <socket/socket.h>
 #include <tun/tun.h>
@@ -17,19 +18,21 @@ void readTun(
     NContext::TContextPtr ctx,
     NTun::TTunPtr tun,
     NSocket::TSocketPtr socket,
+    NCrypt::TCryptPtr crypt,
     std::string remoteIp,
     std::uint16_t remotePort
 ) {
     while(true) {
         ctx->TunWait();
-        const auto& [size, buffer] = tun->Read();
+        const auto& [buffer, size] = tun->Read();
         if (size == 0) {
             ctx->TunReset();
             continue;
         } else if (!NUtils::validIpDatagram(buffer, size)) {
             continue;
         }
-        socket->Write(buffer, size, remoteIp, remotePort);
+        const auto& [encrBuffer, encrSize] = crypt->Encrypt(buffer, size);
+        socket->Write(encrBuffer, encrSize, remoteIp, remotePort);
     }
 }
 
@@ -37,19 +40,24 @@ void readSocket(
     NContext::TContextPtr ctx,
     NTun::TTunPtr tun,
     NSocket::TSocketPtr socket,
+    NCrypt::TCryptPtr crypt,
     std::string remoteIp,
     std::uint16_t remotePort
 ) {
     while(true) {
         ctx->SocketWait();
-        const auto& [size, ip, port, buffer] = socket->Read();
+        const auto& [buffer, size, ip, port] = socket->Read();
         if (size == 0) {
             ctx->SocketReset();
             continue;
-        } else if (remoteIp != ip || port != remotePort || !NUtils::validIpDatagram(buffer, size)) {
+        } else if (remoteIp != ip || port != remotePort) {
             continue;
         }
-        tun->Write(buffer, size);
+        const auto& [decrBuffer, decrSize] = crypt->Decrypt(buffer, size);
+        if (!NUtils::validIpDatagram(decrBuffer, decrSize)) {
+            continue;
+        }
+        tun->Write(decrBuffer, decrSize);
     }
 }
 
@@ -63,35 +71,35 @@ int main() {
 
     const auto env = NUtils::getEnv();
 
-    if(env.count("tunDevice") > 0) {
+    if (env.count("tunDevice") > 0) {
         tunDevice = env.at("tunDevice");
     } else {
         std::cerr << "export TUN_DEVICE env" << std::endl;
         return 1;
     }
 
-    if(env.count("remoteIp") > 0) {
+    if (env.count("remoteIp") > 0) {
         remoteIp = env.at("remoteIp");
     } else {
         std::cerr << "export REMOTE_IP env" << std::endl;
         return 1;
     }
 
-    if(env.count("remotePort") > 0) {
+    if (env.count("remotePort") > 0) {
         remotePort = std::stoi(env.at("remotePort"));
     } else {
         std::cerr << "export REMOTE_PORT env" << std::endl;
         return 1;
     }
 
-    if(env.count("localPort") > 0) {
+    if (env.count("localPort") > 0) {
         localPort = std::stoi(env.at("localPort"));
     } else {
         std::cerr << "export LOCAL_PORT env" << std::endl;
         return 1;
     }
 
-    if(env.count("mtu") > 0) {
+    if (env.count("mtu") > 0) {
         mtu = std::stoi(env.at("mtu"));
         if (mtu > MAX_MTU_SIZE) {
             std::cerr << "mtu must less then MAX_MTU_SIZE" << std::endl;
@@ -104,21 +112,21 @@ int main() {
 
     auto tun = std::make_shared<NTun::TTun>(MAX_DATA_SIZE);
 
-    if(auto ret = tun->Init(tunDevice); ret < 0) {
+    if (auto ret = tun->Init(tunDevice); ret < 0) {
         std::cerr << "failed tunnel init:" << strerror(errno) << std::endl;
         return 1;
     }
 
     auto socket = std::make_shared<NSocket::TSocket>(MAX_DATA_SIZE);
 
-    if(auto ret = socket->Init(localIp, localPort); ret < 0) {
+    if (auto ret = socket->Init(localIp, localPort); ret < 0) {
         std::cerr << "failed socket init:" << strerror(errno) << std::endl;
         return 1;
     }
 
     auto epoll = std::make_shared<NEpoll::TEpoll>(MAX_EVENTS);
 
-    if(auto ret = epoll->Init(); ret < 0) {
+    if (auto ret = epoll->Init(); ret < 0) {
         std::cerr << "failed epoll init:" << strerror(errno) << std::endl;
         return 1;
     }
@@ -128,10 +136,17 @@ int main() {
 
     auto ctx = std::make_shared<NContext::TContext>();
 
-    std::thread tTun(readTun, ctx, tun, socket, remoteIp, remotePort);
-    std::thread tSocket(readSocket, ctx, tun, socket, remoteIp, remotePort);
+    auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
 
-    while(true) {
+    if (auto ret = crypt->Init("", ""); ret < 0) {
+        std::cerr << "failed crypt init" << std::endl;
+        return 1;
+    }
+
+    std::thread tTun(readTun, ctx, tun, socket, crypt, remoteIp, remotePort);
+    std::thread tSocket(readSocket, ctx, tun, socket, crypt, remoteIp, remotePort);
+
+    while (true) {
         const auto numberFd = epoll->Wait();
         if (numberFd <= 0) {
             continue;
