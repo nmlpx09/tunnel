@@ -8,6 +8,7 @@ NET_DEVICE=`ip route | grep '^default' | cut -d ' ' -f 5-`
 LOCAL_PORT=1234
 TUN_IP=10.0.3.1
 MTU=1460
+KEYS_FILE=/etc/tunnel/keys
 
 function test_sudo {
     if [ `whoami` != root  ]; then
@@ -40,8 +41,9 @@ case $1 in
         export TUN_DEVICE=$TUN_DEVICE
         export LOCAL_PORT=$LOCAL_PORT
         export MTU=$MTU
+        export KEYS_FILE=$KEYS_FILE
 
-        nice --15 $BIN_NAME &
+        (nice --15 $BIN_NAME |& logger -t tserver) &
         ;;
 
     "stop")

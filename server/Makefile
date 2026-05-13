@@ -2,7 +2,7 @@ CC=g++
 CCFLAGS=-O3 -std=c++20 -pedantic -Wall -W -Werror -Wextra -c -I..
 DEFINES=
 
-OBJ=server.o ../context/context.o ../common/utils.o ../crypt/crypt.o ../epoll/epoll.o ../ips_storage/ips_storage.o ../socket/socket.o ../tun/tun.o
+OBJ=server.o ../context/context.o ../common/utils.o ../crypt/crypt.o ../crypt/utils.o ../epoll/epoll.o ../ips_storage/ips_storage.o ../socket/socket.o ../tun/tun.o
 LDFLAGS=-lcrypto -lpthread
 
 RUN=tserver

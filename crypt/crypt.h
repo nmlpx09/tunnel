@@ -19,7 +19,7 @@ public:
     TCrypt(TCrypt&&) = delete;
     TCrypt& operator=(const TCrypt&) = delete;
     TCrypt& operator=(TCrypt&&) = delete;
-    ~TCrypt();
+    ~TCrypt() = default;
 
     std::int32_t Init(std::string chiper, std::string iv) noexcept;
 
@@ -34,8 +34,10 @@ public:
     > Decrypt(const TBuffer& buffer, std::size_t size) noexcept;
 
 private:
-    EVP_CIPHER_CTX* EncCtx = nullptr;
-    EVP_CIPHER_CTX* DecCtx = nullptr;
+    using TCipherCtxPtr = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
+    TCipherCtxPtr EncCtx = TCipherCtxPtr{EVP_CIPHER_CTX_new(), &EVP_CIPHER_CTX_free};
+    TCipherCtxPtr DecCtx = TCipherCtxPtr{EVP_CIPHER_CTX_new(), &EVP_CIPHER_CTX_free};
+
     TBuffer EncBuffer;
     TBuffer DecBuffer;
 };

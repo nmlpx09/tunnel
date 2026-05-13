@@ -3,6 +3,7 @@
 #include <common/types.h>
 #include <common/utils.h>
 #include <crypt/crypt.h>
+#include <crypt/utils.h>
 #include <epoll/epoll.h>
 #include <ips_storage/ips_storage.h>
 #include <socket/socket.h>
@@ -68,6 +69,7 @@ int main() {
     const std::string localIp = "0.0.0.0";
     std::uint16_t localPort = 0;
     std::size_t mtu = 0;
+    std::string keysFile;
 
     const auto env = NUtils::getEnv();
 
@@ -93,6 +95,13 @@ int main() {
         }
     } else {
         std::cerr << "export MTU env" << std::endl;
+        return 1;
+    }
+
+    if (env.count("keysFile") > 0) {
+        keysFile = env.at("keysFile");
+    } else {
+        std::cerr << "export KEYS_FILE env" << std::endl;
         return 1;
     }
 
@@ -126,8 +135,14 @@ int main() {
 
     auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
 
-    if (auto ret = crypt->Init("", ""); ret < 0) {
-        std::cerr << "failed crypt" << std::endl;
+    auto keyPair = NCrypt::loadKeyPair(keysFile);
+
+    if (!keyPair) {
+        std::cerr << "failed load key pair" << std::endl;
+    }
+
+    if (auto ret = crypt->Init(keyPair->first, keyPair->second); ret < 0) {
+        std::cerr << "failed crypt init" << std::endl;
         return 1;
     }
 
