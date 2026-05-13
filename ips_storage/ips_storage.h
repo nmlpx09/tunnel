@@ -37,6 +37,7 @@ public:
 
 private:
     std::unordered_map<std::uint32_t, TElement> Map;
+    std::chrono::steady_clock::time_point LiveTime = std::chrono::steady_clock::now();
     std::mutex Mutex;
 };
 

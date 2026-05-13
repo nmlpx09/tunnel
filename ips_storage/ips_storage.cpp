@@ -3,8 +3,8 @@
 namespace NIpsStorage {
 
 TElement::TElement(std::string ip, std::uint16_t port)
-    : Ip(std::move(ip))
-    , Port(port) {}
+: Ip(std::move(ip))
+, Port(port) {}
 
 bool TElement::operator ==(const TElement& lhs) const {
     return Ip == lhs.Ip && Port == lhs.Port;
@@ -12,8 +12,13 @@ bool TElement::operator ==(const TElement& lhs) const {
 
 void TIpsStorage::Add(std::uint32_t key, std::string ip, std::uint16_t port) noexcept {
     std::unique_lock<std::mutex> ulock{Mutex};
+    auto now = std::chrono::steady_clock::now();
+    if (now - LiveTime > std::chrono::seconds(3600)) {
+        LiveTime = now;
+        Map.clear();
+    }
     const auto newElement = TElement{std::move(ip), port};
-    if (Map.count(key) == 0 || (Map[key] != newElement && std::chrono::steady_clock::now() - Map[key].Timestamp > std::chrono::seconds(10))) {
+    if (Map.count(key) == 0 || (Map[key] != newElement && now - Map[key].Timestamp > std::chrono::seconds(10))) {
         Map[key] = newElement;
     }
 }

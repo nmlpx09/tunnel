@@ -46,7 +46,7 @@ case $1 in
         export MTU=$MTU
         export KEYS_FILE=$KEYS_FILE
 
-        ($BIN_NAME |& logger -t tclient) &
+        $BIN_NAME &
         ;;
 
     "stop")

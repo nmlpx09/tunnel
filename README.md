@@ -1,11 +1,12 @@
 # about
 
-simple udp tunnel without sessions and handshakes
+simple udp tunnel with aes crypt and without sessions or handshakes
 
 # requirement
 
 1. g++ (version 10.2.1 or newest)
 2. make
+3. libssl-dev
 
 # confugure env
 
@@ -14,7 +15,8 @@ REMOTE_IP - server ip
 REMOTE_PORT - server port  
 LOCAL_PORT- client port  
 TUN_IP - local tun ip  
-MTU - mtu (1480 max)  
+MTU - mtu (1460 max)  
+KEYS_FILE - file with key and iv  
 
 # command
 

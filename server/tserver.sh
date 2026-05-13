@@ -43,7 +43,7 @@ case $1 in
         export MTU=$MTU
         export KEYS_FILE=$KEYS_FILE
 
-        (nice --15 $BIN_NAME |& logger -t tserver) &
+        nice --15 $BIN_NAME &
         ;;
 
     "stop")

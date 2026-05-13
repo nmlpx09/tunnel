@@ -13,8 +13,8 @@ TSocket::~TSocket() {
 }
 
 TSocket::TSocket(std::size_t maxBufferSize) noexcept
-    : MaxBufferSize(maxBufferSize)
-    , Buffer(MaxBufferSize, 0) { }
+: MaxBufferSize(maxBufferSize)
+, Buffer(MaxBufferSize, 0) { }
 
 std::int32_t TSocket::Init(
     std::string localIp,
