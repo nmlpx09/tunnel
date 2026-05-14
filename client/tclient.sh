@@ -46,7 +46,7 @@ case $1 in
         export MTU=$MTU
         export KEYS_FILE=$KEYS_FILE
 
-        $BIN_NAME &
+        nice --15 $BIN_NAME &
         ;;
 
     "stop")
