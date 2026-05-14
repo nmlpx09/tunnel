@@ -1,5 +1,7 @@
 #include "socket.h"
 
+#include <errors.h>
+
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <sys/socket.h>
@@ -16,12 +18,12 @@ TSocket::TSocket(std::size_t maxBufferSize) noexcept
 : MaxBufferSize(maxBufferSize)
 , Buffer(MaxBufferSize, 0) { }
 
-std::int32_t TSocket::Init(
+std::error_code TSocket::Init(
     std::string localIp,
     std::uint16_t localPort
 ) noexcept {
     if (Fd = socket(AF_INET, SOCK_DGRAM, 0); Fd < 0) {
-        return -1;
+        return EErrorCode::SocketOpen;
     }
 
     const sockaddr_in sockaddrClient = sockaddr_in {
@@ -37,14 +39,14 @@ std::int32_t TSocket::Init(
         reinterpret_cast<const sockaddr*>(&sockaddrClient),
         sizeof(sockaddrClient)); ret < 0
     ) {
-        return -1;
+        return EErrorCode::SocketBind;
     }
 
     if (auto ret = fcntl(Fd, F_SETFL, O_NONBLOCK); ret < 0){
-        return -1;
+        return EErrorCode::SocketConfig;
     }
 
-    return 0;
+    return {};
 }
 
 void TSocket::Write(

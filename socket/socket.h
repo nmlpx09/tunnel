@@ -1,12 +1,13 @@
 #pragma once
 
-#include <common/types.h>
 #include <epoll/epoll.h>
+#include <types.h>
 
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <tuple>
 
 namespace NSocket {
@@ -20,7 +21,7 @@ public:
     TSocket& operator=(TSocket&&) = delete;
     ~TSocket();
 
-    std::int32_t Init(std::string localIp, std::uint16_t localPort) noexcept;
+    std::error_code Init(std::string localIp, std::uint16_t localPort) noexcept;
 
     void Write(
         const TBuffer& buffer,

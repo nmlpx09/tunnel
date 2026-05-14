@@ -1,5 +1,7 @@
 #include "crypt.h"
 
+#include <errors.h>
+
 #include <openssl/aes.h>
 
 namespace NCrypt {
@@ -8,18 +10,18 @@ TCrypt::TCrypt(std::size_t maxBufferSize) noexcept
 : EncBuffer(maxBufferSize + AES_BLOCK_SIZE, 0)
 , DecBuffer(maxBufferSize + AES_BLOCK_SIZE, 0) {}
 
-std::int32_t TCrypt::Init(std::string chiper, std::string iv) noexcept {
+std::error_code TCrypt::Init(std::string chiper, std::string iv) noexcept {
     if (auto ret = EVP_EncryptInit_ex(EncCtx.get(), EVP_aes_128_cbc(), nullptr,
             reinterpret_cast<const unsigned char*>(chiper.c_str()), reinterpret_cast<const unsigned char*>(iv.c_str())); ret == 0) {
-        return -1;
+        return EErrorCode::InitEncrypt;
     }
 
     if (auto ret = EVP_DecryptInit_ex(DecCtx.get(), EVP_aes_128_cbc(), nullptr,
             reinterpret_cast<const unsigned char*>(chiper.c_str()), reinterpret_cast<const unsigned char*>(iv.c_str())); ret == 0) {
-        return -1;
+        return EErrorCode::InitDecrypt;
     }
 
-    return 0;
+    return {};
 }
 
 std::tuple<

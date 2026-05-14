@@ -11,17 +11,17 @@ TEpoll::~TEpoll() {
 
 TEpoll::TEpoll(std::size_t maxEvents) noexcept : MaxEvents(maxEvents) { }
 
-std::int32_t TEpoll::Init() noexcept {
+std::error_code TEpoll::Init() noexcept {
     if (MaxEvents == 0) {
-        return -1;
+        return EErrorCode::EpollZeroInit;
     }
 
     if (Fd = epoll_create1(0); Fd < 0) {
-        return -1;
+        return EErrorCode::EpollCreate;
     }
 
     Events = std::vector<epoll_event>(MaxEvents);
-    return 0;
+    return {};
 }
 
 std::size_t TEpoll::Wait() noexcept {

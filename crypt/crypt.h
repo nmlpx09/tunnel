@@ -2,7 +2,8 @@
 
 #include <openssl/evp.h>
 
-#include <common/types.h>
+#include <system_error>
+#include <types.h>
 
 #include <cstdint>
 #include <functional>
@@ -21,7 +22,7 @@ public:
     TCrypt& operator=(TCrypt&&) = delete;
     ~TCrypt() = default;
 
-    std::int32_t Init(std::string chiper, std::string iv) noexcept;
+    std::error_code Init(std::string chiper, std::string iv) noexcept;
 
     std::tuple<
         std::reference_wrapper<const TBuffer>,

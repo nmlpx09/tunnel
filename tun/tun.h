@@ -1,12 +1,13 @@
 #pragma once
 
-#include <common/types.h>
 #include <epoll/epoll.h>
+#include <types.h>
 
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <tuple>
 
 namespace NTun {
@@ -20,7 +21,7 @@ public:
     TTun& operator=(TTun&&) = delete;
     ~TTun();
 
-    std::int32_t Init(std::string deviceName) noexcept;
+    std::error_code Init(std::string deviceName) noexcept;
 
     void Write(const TBuffer& buffer, std::size_t size) const noexcept;
 

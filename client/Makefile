@@ -2,7 +2,7 @@ CC=g++
 CCFLAGS=-O3 -std=c++20 -pedantic -Wall -W -Werror -Wextra -c -I..
 DEFINES=
 
-OBJ=client.o ../context/context.o ../common/utils.o ../crypt/crypt.o ../crypt/utils.o ../epoll/epoll.o ../socket/socket.o ../tun/tun.o
+OBJ=client.o ../context/context.o ../crypt/crypt.o ../crypt/utils.o ../epoll/epoll.o ../socket/socket.o ../tun/tun.o ../utils/utils.o
 LDFLAGS=-lcrypto -lpthread
 
 RUN=tclient

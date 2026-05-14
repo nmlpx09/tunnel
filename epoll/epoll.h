@@ -1,9 +1,12 @@
 #pragma once
 
+#include <errors.h>
+
 #include <sys/epoll.h>
 
 #include <cstdint>
 #include <memory>
+#include <system_error>
 #include <vector>
 
 namespace NEpoll {
@@ -19,10 +22,10 @@ public:
     TEpoll& operator=(TEpoll&&) = delete;
     ~TEpoll();
 
-    std::int32_t Init() noexcept;
+    std::error_code Init() noexcept;
 
     template <class TFdProviderPtr>
-    std::int32_t Add(TFdProviderPtr fdProvider) const noexcept {
+    std::error_code Add(TFdProviderPtr fdProvider) const noexcept {
         auto event = epoll_event {
             .events = EPOLLIN,
             .data = {
@@ -30,9 +33,9 @@ public:
             }
         };
         if (auto ret = epoll_ctl(Fd, EPOLL_CTL_ADD, fdProvider->Fd, &event); ret < 0) {
-            return -1;
+            return EErrorCode::EpollAdd;
         }
-        return 0;
+        return {};
     }
 
     std::size_t Wait() noexcept;

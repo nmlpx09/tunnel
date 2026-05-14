@@ -1,5 +1,7 @@
 #include "tun.h"
 
+#include <errors.h>
+
 #include <fcntl.h>
 #include <linux/if.h>
 #include <linux/if_tun.h>
@@ -19,9 +21,9 @@ TTun::TTun(std::size_t maxBufferSize) noexcept
 : MaxBufferSize(maxBufferSize)
 , Buffer(MaxBufferSize, 0) { }
 
-std::int32_t TTun::Init(std::string deviceName) noexcept {
+std::error_code TTun::Init(std::string deviceName) noexcept {
     if(Fd = open("/dev/net/tun", O_RDWR); Fd < 0) {
-        return -1;
+        return EErrorCode::TunOpen;
     }
 
     ifreq ifr;
@@ -30,13 +32,13 @@ std::int32_t TTun::Init(std::string deviceName) noexcept {
     std::strncpy(ifr.ifr_name, deviceName.c_str(), deviceName.size());
 
     if (auto ret = ioctl(Fd, TUNSETIFF, &ifr); ret < 0) {
-        return -1;
+        return EErrorCode::TunBind;
     }
 
     if (auto ret = fcntl(Fd, F_SETFL, O_NONBLOCK); ret < 0){
-        return -1;
+        return EErrorCode::TunConfig;
     }
-    return 0;
+    return {};
 }
 
 void TTun::Write(const TBuffer& buffer, std::size_t size) const noexcept {

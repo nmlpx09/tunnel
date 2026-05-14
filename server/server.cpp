@@ -1,13 +1,13 @@
 #include <configs.h>
 #include <context/context.h>
-#include <common/types.h>
-#include <common/utils.h>
 #include <crypt/crypt.h>
 #include <crypt/utils.h>
 #include <epoll/epoll.h>
 #include <ips_storage/ips_storage.h>
 #include <socket/socket.h>
 #include <tun/tun.h>
+#include <utils/utils.h>
+#include <types.h>
 
 #include <cstdint>
 #include <cstring>
@@ -84,50 +84,57 @@ int main() {
         localPort = std::stoi(env.at("localPort"));
     } else {
         std::cerr << "export LOCAL_PORT env" << std::endl;
-        return 1;
+        return 4;
     }
 
     if (env.count("mtu") > 0) {
         mtu = std::stoi(env.at("mtu"));
         if (mtu > MAX_MTU_SIZE) {
             std::cerr << "mtu must less then MAX_MTU_SIZE" << std::endl;
-            return 1;
+            return 5;
         }
     } else {
         std::cerr << "export MTU env" << std::endl;
-        return 1;
+        return 6;
     }
 
     if (env.count("keysFile") > 0) {
         keysFile = env.at("keysFile");
     } else {
         std::cerr << "export KEYS_FILE env" << std::endl;
-        return 1;
+        return 7;
     }
 
     auto tun = std::make_shared<NTun::TTun>(MAX_DATA_SIZE);
 
-    if (auto ret = tun->Init(tunDevice); ret < 0) {
-        std::cerr << "failed tunnel init:" << strerror(errno) << std::endl;
-        return 1;
+    if (auto ec = tun->Init(tunDevice); ec) {
+        std::cerr << ec.message() << std::endl;
+        return 8;
     }
 
     auto socket = std::make_shared<NSocket::TSocket>(MAX_DATA_SIZE);
 
-    if (auto ret = socket->Init(localIp, localPort); ret < 0) {
-        std::cerr << "failed socket init:" << strerror(errno) << std::endl;
-        return 1;
+    if (auto ec = socket->Init(localIp, localPort); ec) {
+        std::cerr << ec.message() << std::endl;
+        return 9;
     }
 
     auto epoll = std::make_shared<NEpoll::TEpoll>(MAX_EVENTS);
 
-    if (auto ret = epoll->Init(); ret < 0) {
-        std::cerr << "failed epoll init:" << strerror(errno) << std::endl;
-        return 1;
+    if (auto ec = epoll->Init(); ec) {
+        std::cerr << ec.message() << std::endl;
+        return 10;
     }
 
-    epoll->Add(tun);
-    epoll->Add(socket);
+    if(auto ec = epoll->Add(tun); ec) {
+        std::cerr << ec.message() << std::endl;
+        return 11;
+    }
+
+    if(auto ec = epoll->Add(socket); ec) {
+        std::cerr << ec.message() << std::endl;
+        return 12;
+    }
 
     auto ctx = std::make_shared<NContext::TContext>();
 
@@ -139,11 +146,12 @@ int main() {
 
     if (!keyPair) {
         std::cerr << "failed load key pair" << std::endl;
+        return 13;
     }
 
-    if (auto ret = crypt->Init(keyPair->first, keyPair->second); ret < 0) {
-        std::cerr << "failed crypt init" << std::endl;
-        return 1;
+    if (auto ec = crypt->Init(keyPair->first, keyPair->second); ec) {
+        std::cerr << ec.message() << std::endl;
+        return 14;
     }
 
     std::thread tTun(readTun, ctx, tun, socket, crypt, ipsStorage);
