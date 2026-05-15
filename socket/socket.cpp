@@ -19,7 +19,7 @@ TSocket::TSocket(std::size_t maxBufferSize) noexcept
 , Buffer(MaxBufferSize, 0) { }
 
 std::error_code TSocket::Init(
-    std::string localIp,
+    const std::string& localIp,
     std::uint16_t localPort
 ) noexcept {
     if (Fd = socket(AF_INET, SOCK_DGRAM, 0); Fd < 0) {
@@ -42,7 +42,7 @@ std::error_code TSocket::Init(
         return EErrorCode::SocketBind;
     }
 
-    if (auto ret = fcntl(Fd, F_SETFL, O_NONBLOCK); ret < 0){
+    if (auto ret = fcntl(Fd, F_SETFL, O_NONBLOCK); ret < 0) {
         return EErrorCode::SocketConfig;
     }
 

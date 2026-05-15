@@ -30,7 +30,7 @@ public:
     TIpsStorage& operator=(TIpsStorage&&) = delete;
     ~TIpsStorage() = default;
 
-    void Add(std::uint32_t key, std::string ip, std::uint16_t port) noexcept;
+    void Add(std::uint32_t key, const std::string& ip, std::uint16_t port) noexcept;
     std::optional<std::pair<std::string, std::uint16_t>> Get(std::uint32_t key) noexcept;
 
 private:

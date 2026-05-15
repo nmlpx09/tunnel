@@ -21,8 +21,8 @@ TTun::TTun(std::size_t maxBufferSize) noexcept
 : MaxBufferSize(maxBufferSize)
 , Buffer(MaxBufferSize, 0) { }
 
-std::error_code TTun::Init(std::string deviceName) noexcept {
-    if(Fd = open("/dev/net/tun", O_RDWR); Fd < 0) {
+std::error_code TTun::Init(const std::string& deviceName) noexcept {
+    if (Fd = open("/dev/net/tun", O_RDWR); Fd < 0) {
         return EErrorCode::TunOpen;
     }
 
@@ -35,7 +35,7 @@ std::error_code TTun::Init(std::string deviceName) noexcept {
         return EErrorCode::TunBind;
     }
 
-    if (auto ret = fcntl(Fd, F_SETFL, O_NONBLOCK); ret < 0){
+    if (auto ret = fcntl(Fd, F_SETFL, O_NONBLOCK); ret < 0) {
         return EErrorCode::TunConfig;
     }
     return {};

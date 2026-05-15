@@ -1,6 +1,6 @@
 # about
 
-simple udp tunnel with aes crypt and without sessions or handshakes
+simple udp tunnel with aes128 crypt and without sessions or handshakes
 
 # requirement
 

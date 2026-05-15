@@ -20,7 +20,7 @@ void readTun(
     NCrypt::TCryptPtr crypt,
     std::string remoteIp,
     std::uint16_t remotePort
-) {
+) noexcept {
     while(true) {
         ctx->TunWait();
         const auto& [buffer, size] = tun->Read();
@@ -42,7 +42,7 @@ void readSocket(
     NCrypt::TCryptPtr crypt,
     std::string remoteIp,
     std::uint16_t remotePort
-) {
+) noexcept {
     while(true) {
         ctx->SocketWait();
         const auto& [buffer, size, ip, port] = socket->Read();
@@ -138,12 +138,12 @@ int main() {
         return 10;
     }
 
-    if(auto ec = epoll->Add(tun); ec) {
+    if (auto ec = epoll->Add(tun); ec) {
         std::cerr << ec.message() << std::endl;
         return 11;
     }
 
-    if(auto ec = epoll->Add(socket); ec) {
+    if (auto ec = epoll->Add(socket); ec) {
         std::cerr << ec.message() << std::endl;
         return 12;
     }

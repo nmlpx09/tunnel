@@ -21,7 +21,7 @@ public:
     TTun& operator=(TTun&&) = delete;
     ~TTun();
 
-    std::error_code Init(std::string deviceName) noexcept;
+    std::error_code Init(const std::string& deviceName) noexcept;
 
     void Write(const TBuffer& buffer, std::size_t size) const noexcept;
 

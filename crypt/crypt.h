@@ -2,13 +2,13 @@
 
 #include <openssl/evp.h>
 
-#include <system_error>
 #include <types.h>
 
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <tuple>
 
 namespace NCrypt {
@@ -22,7 +22,7 @@ public:
     TCrypt& operator=(TCrypt&&) = delete;
     ~TCrypt() = default;
 
-    std::error_code Init(std::string chiper, std::string iv) noexcept;
+    std::error_code Init(const std::string& chiper, const std::string& iv) noexcept;
 
     std::tuple<
         std::reference_wrapper<const TBuffer>,

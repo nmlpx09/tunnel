@@ -9,7 +9,6 @@
 #include <types.h>
 
 #include <cstdint>
-#include <cstring>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -21,7 +20,7 @@ void readTun(
     NSocket::TSocketPtr socket,
     NCrypt::TCryptPtr crypt,
     NIpsStorage::TIpsStoragePtr ipsStorage
-) {
+) noexcept {
     while(true) {
         ctx->TunWait();
         const auto& [buffer, size] = tun->Read();
@@ -44,7 +43,7 @@ void readSocket(
     NSocket::TSocketPtr socket,
     NCrypt::TCryptPtr crypt,
     NIpsStorage::TIpsStoragePtr ipsStorage
-) {
+) noexcept {
     while(true) {
         ctx->SocketWait();
         const auto& [buffer, size, ip, port] = socket->Read();
@@ -125,12 +124,12 @@ int main() {
         return 10;
     }
 
-    if(auto ec = epoll->Add(tun); ec) {
+    if( auto ec = epoll->Add(tun); ec) {
         std::cerr << ec.message() << std::endl;
         return 11;
     }
 
-    if(auto ec = epoll->Add(socket); ec) {
+    if (auto ec = epoll->Add(socket); ec) {
         std::cerr << ec.message() << std::endl;
         return 12;
     }

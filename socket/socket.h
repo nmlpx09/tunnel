@@ -21,7 +21,7 @@ public:
     TSocket& operator=(TSocket&&) = delete;
     ~TSocket();
 
-    std::error_code Init(std::string localIp, std::uint16_t localPort) noexcept;
+    std::error_code Init(const std::string& localIp, std::uint16_t localPort) noexcept;
 
     void Write(
         const TBuffer& buffer,
