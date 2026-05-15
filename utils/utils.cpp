@@ -1,5 +1,6 @@
 #include "utils.h"
 
+#include <fstream>
 #include <cstdlib>
 
 namespace NUtils {
@@ -40,6 +41,16 @@ std::unordered_map<std::string, std::string> getEnv() {
         result.insert({"keysFile", std::getenv("KEYS_FILE")});
     }
     return result;
+}
+
+std::optional<std::pair<std::string, std::string>> loadKeyPair(const std::string& keysFile) {
+    std::ifstream file(keysFile);
+    std::string chiper;
+    std::string iv;
+    if (!file.is_open() || !std::getline(file, chiper) || !std::getline(file, iv)) {
+        return {};
+    }
+    return std::make_pair(chiper, iv);
 }
 
 }

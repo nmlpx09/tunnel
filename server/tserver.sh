@@ -11,7 +11,7 @@ MTU=1460
 KEYS_FILE=/etc/tunnel/keys
 
 function test_sudo {
-    if [ `whoami` != root  ]; then
+    if [ `whoami` != root ]; then
         echo "run on sudo"
 
         exit 1
@@ -43,7 +43,7 @@ case $1 in
         export MTU=$MTU
         export KEYS_FILE=$KEYS_FILE
 
-        nice --15 $BIN_NAME &
+        nice --15 $BIN_NAME |& logger -t tserver &
         ;;
 
     "stop")

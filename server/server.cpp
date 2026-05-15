@@ -1,7 +1,6 @@
 #include <configs.h>
 #include <context/context.h>
 #include <crypt/crypt.h>
-#include <crypt/utils.h>
 #include <epoll/epoll.h>
 #include <ips_storage/ips_storage.h>
 #include <socket/socket.h>
@@ -142,7 +141,7 @@ int main() {
 
     auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
 
-    auto keyPair = NCrypt::loadKeyPair(keysFile);
+    auto keyPair = NUtils::loadKeyPair(keysFile);
 
     if (!keyPair) {
         std::cerr << "failed load key pair" << std::endl;
@@ -156,6 +155,8 @@ int main() {
 
     std::thread tTun(readTun, ctx, tun, socket, crypt, ipsStorage);
     std::thread tSocket(readSocket, ctx, tun, socket, crypt, ipsStorage);
+
+    std::cerr << "run server" << std::endl;
 
     while (true) {
         const auto numberFd = epoll->Wait();
