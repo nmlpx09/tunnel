@@ -57,7 +57,7 @@ case $1 in
 
         ip route del $REMOTE_IP
 
-        pkill -15 $BIN_NAME
+        pkill -2 $BIN_NAME
         ;;
     *)
 esac

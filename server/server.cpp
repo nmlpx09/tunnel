@@ -8,11 +8,20 @@
 #include <utils/utils.h>
 #include <types.h>
 
+#include <csignal>
 #include <cstdint>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <thread>
+
+static NContext::TContextPtr Ctx;
+
+static void signalStop(std::int32_t) {
+    if (Ctx) {
+        Ctx->Stop();
+    }
+}
 
 void readTun(
     NContext::TContextPtr ctx,
@@ -23,6 +32,9 @@ void readTun(
 ) noexcept {
     while(true) {
         ctx->TunWait();
+        if (ctx->IsStop()) {
+            break;
+        }
         const auto& [buffer, size] = tun->Read();
         if (size == 0) {
             ctx->TunReset();
@@ -46,6 +58,9 @@ void readSocket(
 ) noexcept {
     while(true) {
         ctx->SocketWait();
+        if (ctx->IsStop()) {
+            break;
+        }
         const auto& [buffer, size, ip, port] = socket->Read();
         if (size == 0) {
             ctx->SocketReset();
@@ -152,6 +167,9 @@ int main() {
         return 14;
     }
 
+    Ctx = ctx;
+    std::signal(SIGINT, signalStop);
+
     std::thread tTun(readTun, ctx, tun, socket, crypt, ipsStorage);
     std::thread tSocket(readSocket, ctx, tun, socket, crypt, ipsStorage);
 
@@ -159,12 +177,16 @@ int main() {
 
     while (true) {
         const auto numberFd = epoll->Wait();
+        if (ctx->IsStop()) {
+            break;
+        }
         if (numberFd <= 0) {
             continue;
         }
+
         const auto& events = epoll->GetEvents();
 
-        for (std::size_t index = 0; index < numberFd; ++index) {
+        for (auto index = 0; index < numberFd; ++index) {
             if (tun->IsFd(events[index].data.fd)) {
                 ctx->TunNotify();
             }
@@ -173,4 +195,9 @@ int main() {
             }
         }
     }
+
+    tTun.join();
+    tSocket.join();
+
+    std::cerr << "stop server" << std::endl;
 }

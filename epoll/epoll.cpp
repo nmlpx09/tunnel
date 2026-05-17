@@ -24,7 +24,10 @@ std::error_code TEpoll::Init() noexcept {
     return {};
 }
 
-std::size_t TEpoll::Wait() noexcept {
+std::int32_t TEpoll::Wait() noexcept {
+    if (Fd < 0) {
+        return 0;
+    }
     return epoll_wait(Fd, Events.data(), MaxEvents, -1);
 }
 

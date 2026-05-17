@@ -22,6 +22,8 @@ public:
     void SocketNotify() noexcept;
     void TunReset() noexcept;
     void SocketReset() noexcept;
+    void Stop() noexcept;
+    bool IsStop() noexcept;
 private:
     std::mutex TunMutex;
     std::mutex SocketMutex;
@@ -29,6 +31,7 @@ private:
     std::condition_variable SocketCv;
     std::size_t TunReady = 0;
     std::size_t SocketReady = 0;
+    bool StopFlag = false;
 };
 
 using TContextPtr = std::shared_ptr<TContext>;

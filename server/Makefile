@@ -1,5 +1,5 @@
 CC=g++
-CCFLAGS=-O3 -std=c++20 -pedantic -Wall -W -Werror -Wextra -c -I..
+CCFLAGS=-Ofast -std=c++20 -pedantic -Wall -W -Werror -Wextra -c -I..
 DEFINES=
 
 OBJ=server.o ../context/context.o ../crypt/crypt.o ../epoll/epoll.o ../ips_storage/ips_storage.o ../socket/socket.o ../tun/tun.o ../utils/utils.o

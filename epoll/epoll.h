@@ -38,7 +38,7 @@ public:
         return {};
     }
 
-    std::size_t Wait() noexcept;
+    std::int32_t Wait() noexcept;
 
     const TEvents& GetEvents() const noexcept;
 
