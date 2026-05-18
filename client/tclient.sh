@@ -5,7 +5,7 @@ set -ex
 BIN_NAME=tclient
 TUN_DEVICE=tun0
 REMOTE_IP=77.91.92.110
-REMOTE_PORT=1234
+REMOTE_PORT=69
 LOCAL_PORT=1234
 TUN_IP=10.0.3.2
 MTU=1460
@@ -57,7 +57,7 @@ case $1 in
 
         ip route del $REMOTE_IP
 
-        pkill -2 $BIN_NAME
+        pkill -9 $BIN_NAME
         ;;
     *)
 esac

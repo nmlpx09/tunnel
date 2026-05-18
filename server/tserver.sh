@@ -5,7 +5,7 @@ set -ex
 BIN_NAME=tserver
 TUN_DEVICE=tun0
 NET_DEVICE=`ip route | grep '^default' | cut -d ' ' -f 5-`
-LOCAL_PORT=1234
+LOCAL_PORT=69
 TUN_IP=10.0.3.1
 MTU=1460
 KEYS_FILE=/etc/tunnel/keys
@@ -54,7 +54,7 @@ case $1 in
 
         iptables -t nat -D POSTROUTING -s $TUN_IP/24 -o $NET_DEVICE -j MASQUERADE
 
-        pkill -2 $BIN_NAME
+        pkill -9 $BIN_NAME
         ;;
     *)
 esac

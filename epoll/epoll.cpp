@@ -28,7 +28,7 @@ std::int32_t TEpoll::Wait() noexcept {
     if (Fd < 0) {
         return 0;
     }
-    return epoll_wait(Fd, Events.data(), MaxEvents, -1);
+    return epoll_wait(Fd, Events.data(), MaxEvents, 1000);
 }
 
 const TEpoll::TEvents& TEpoll::GetEvents() const noexcept {
