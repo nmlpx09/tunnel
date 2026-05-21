@@ -10,18 +10,16 @@
 #include <vector>
 #include <unordered_set>
 
-namespace NEpoll {
+namespace NPoll {
 
-struct TEpoll {
-private:
-    using TEvents = std::vector<epoll_event>;
+struct TPoll {
 public:
-    TEpoll(std::size_t maxEvents) noexcept;
-    TEpoll(const TEpoll&) = delete;
-    TEpoll(TEpoll&&) = delete;
-    TEpoll& operator=(const TEpoll&) = delete;
-    TEpoll& operator=(TEpoll&&) = delete;
-    ~TEpoll();
+    TPoll(std::size_t maxEvents) noexcept;
+    TPoll(const TPoll&) = delete;
+    TPoll(TPoll&&) = delete;
+    TPoll& operator=(const TPoll&) = delete;
+    TPoll& operator=(TPoll&&) = delete;
+    ~TPoll();
 
     std::error_code Init() noexcept;
 
@@ -49,10 +47,10 @@ public:
 private:
     std::int32_t Fd = -1;
     std::size_t MaxEvents = 0;
-    TEvents Events;
+    std::vector<epoll_event> Events;
     std::unordered_set<std::int32_t> FdSet;
 };
 
-using TEpollPtr = std::shared_ptr<TEpoll>;
+using TPollPtr = std::shared_ptr<TPoll>;
 
 }

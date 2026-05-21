@@ -1,17 +1,17 @@
-#include "epoll.h"
+#include "poll.h"
 
 #include <unistd.h>
 
-namespace NEpoll {
+namespace NPoll {
 
-TEpoll::~TEpoll() {
+TPoll::~TPoll() {
     close(Fd);
     Fd = -1;
 }
 
-TEpoll::TEpoll(std::size_t maxEvents) noexcept : MaxEvents(maxEvents) { }
+TPoll::TPoll(std::size_t maxEvents) noexcept : MaxEvents(maxEvents) { }
 
-std::error_code TEpoll::Init() noexcept {
+std::error_code TPoll::Init() noexcept {
     if (MaxEvents == 0) {
         return EErrorCode::EpollZeroInit;
     }
@@ -24,7 +24,7 @@ std::error_code TEpoll::Init() noexcept {
     return {};
 }
 
-void TEpoll::Wait() noexcept {
+void TPoll::Wait() noexcept {
     FdSet.clear();
 
     if (Fd < 0) {

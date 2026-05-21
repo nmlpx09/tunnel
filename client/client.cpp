@@ -1,8 +1,8 @@
 #include <configs.h>
 #include <context/context.h>
 #include <crypt/crypt.h>
-#include <epoll/epoll.h>
 #include <socket/socket.h>
+#include <poll/poll.h>
 #include <tun/tun.h>
 #include <utils/utils.h>
 #include <types.h>
@@ -132,19 +132,19 @@ int main() {
         return 9;
     }
 
-    auto epoll = std::make_shared<NEpoll::TEpoll>(MAX_EVENTS);
+    auto poll = std::make_shared<NPoll::TPoll>(MAX_EVENTS);
 
-    if (auto ec = epoll->Init(); ec) {
+    if (auto ec = poll->Init(); ec) {
         std::cerr << ec.message() << std::endl;
         return 10;
     }
 
-    if (auto ec = epoll->Add(tun); ec) {
+    if (auto ec = poll->Add(tun); ec) {
         std::cerr << ec.message() << std::endl;
         return 11;
     }
 
-    if (auto ec = epoll->Add(socket); ec) {
+    if (auto ec = poll->Add(socket); ec) {
         std::cerr << ec.message() << std::endl;
         return 12;
     }
@@ -171,13 +171,13 @@ int main() {
     std::cerr << "run client" << std::endl;
 
     while (true) {
-        epoll->Wait();
+        poll->Wait();
 
-        if (epoll->Contains(tun)) {
+        if (poll->Contains(tun)) {
             ctx->TunNotify();
         }
 
-        if (epoll->Contains(socket)) {
+        if (poll->Contains(socket)) {
             ctx->SocketNotify();
         }
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <epoll/epoll.h>
+#include <poll/poll.h>
 #include <types.h>
 
 #include <cstdint>
@@ -34,7 +34,7 @@ private:
     std::int32_t Fd = -1;
     std::size_t MaxBufferSize = 0;
     TBuffer Buffer;
-    friend class NEpoll::TEpoll;
+    friend class NPoll::TPoll;
 };
 
 using TTunPtr = std::shared_ptr<TTun>;
