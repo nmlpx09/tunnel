@@ -30,8 +30,6 @@ public:
         std::size_t
     > Read() noexcept;
 
-    bool IsFd(std::int32_t fd) const noexcept;
-
 private:
     std::int32_t Fd = -1;
     std::size_t MaxBufferSize = 0;

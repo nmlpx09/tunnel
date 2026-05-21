@@ -24,15 +24,19 @@ std::error_code TEpoll::Init() noexcept {
     return {};
 }
 
-std::int32_t TEpoll::Wait() noexcept {
-    if (Fd < 0) {
-        return 0;
-    }
-    return epoll_wait(Fd, Events.data(), MaxEvents, 1000);
-}
+void TEpoll::Wait() noexcept {
+    FdSet.clear();
 
-const TEpoll::TEvents& TEpoll::GetEvents() const noexcept {
-    return Events;
+    if (Fd < 0) {
+        return;
+    }
+    const auto numberFd = epoll_wait(Fd, Events.data(), MaxEvents, 1000);
+
+    for (auto index = 0; index < numberFd; ++index) {
+        FdSet.insert(Events[index].data.fd);
+    }
+
+    return;
 }
 
 }

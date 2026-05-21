@@ -69,8 +69,4 @@ std::tuple<
     return {cref(Buffer), readSize};
 }
 
-bool TTun::IsFd(std::int32_t fd) const noexcept {
-    return Fd == fd;
-}
-
 }

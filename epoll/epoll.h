@@ -8,6 +8,7 @@
 #include <memory>
 #include <system_error>
 #include <vector>
+#include <unordered_set>
 
 namespace NEpoll {
 
@@ -38,14 +39,18 @@ public:
         return {};
     }
 
-    std::int32_t Wait() noexcept;
+    template <class TFdProviderPtr>
+    bool Contains(TFdProviderPtr fdProvider) const noexcept {
+        return FdSet.contains(fdProvider->Fd);
+    }
 
-    const TEvents& GetEvents() const noexcept;
+    void Wait() noexcept;
 
 private:
     std::int32_t Fd = -1;
     std::size_t MaxEvents = 0;
     TEvents Events;
+    std::unordered_set<std::int32_t> FdSet;
 };
 
 using TEpollPtr = std::shared_ptr<TEpoll>;

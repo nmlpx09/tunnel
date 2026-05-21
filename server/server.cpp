@@ -161,20 +161,14 @@ int main() {
     std::cerr << "run server" << std::endl;
 
     while (true) {
-        const auto numberFd = epoll->Wait();
-        if (numberFd <= 0) {
-            continue;
+        epoll->Wait();
+
+        if (epoll->Contains(tun)) {
+            ctx->TunNotify();
         }
 
-        const auto& events = epoll->GetEvents();
-
-        for (auto index = 0; index < numberFd; ++index) {
-            if (tun->IsFd(events[index].data.fd)) {
-                ctx->TunNotify();
-            }
-            if (socket->IsFd(events[index].data.fd)) {
-                ctx->SocketNotify();
-            }
+        if (epoll->Contains(socket)) {
+            ctx->SocketNotify();
         }
     }
 }

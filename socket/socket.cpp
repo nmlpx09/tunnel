@@ -98,8 +98,4 @@ std::tuple<
     return {cref(Buffer), readSize, inet_ntoa(sockaddrRemote.sin_addr), htons(sockaddrRemote.sin_port)};
 }
 
-bool TSocket::IsFd(std::int32_t fd) const noexcept {
-    return Fd == fd;
-}
-
 }
