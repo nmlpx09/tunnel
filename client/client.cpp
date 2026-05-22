@@ -7,7 +7,6 @@
 #include <utils/utils.h>
 #include <types.h>
 
-#include <csignal>
 #include <cstdint>
 #include <iostream>
 #include <memory>
