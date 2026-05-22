@@ -141,12 +141,12 @@ int main() {
         return 10;
     }
 
-    if (auto ec = poll->RegisterHandler(tun, [ctx] () { ctx->TunNotify(); }); ec) {
+    if (auto ec = poll->RegisterHandlerIn(tun, [ctx] () { ctx->TunNotify(); }); ec) {
         std::cerr << ec.message() << std::endl;
         return 11;
     }
 
-    if (auto ec = poll->RegisterHandler(socket, [ctx] () { ctx->SocketNotify(); }); ec) {
+    if (auto ec = poll->RegisterHandlerIn(socket, [ctx] () { ctx->SocketNotify(); }); ec) {
         std::cerr << ec.message() << std::endl;
         return 12;
     }

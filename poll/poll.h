@@ -27,7 +27,7 @@ public:
     std::error_code Init() noexcept;
 
     template <class TFdProviderPtr>
-    std::error_code RegisterHandler(TFdProviderPtr fdProvider, TTask task) noexcept {
+    std::error_code RegisterHandlerIn(TFdProviderPtr fdProvider, TTask task) noexcept {
         const auto fd = fdProvider->Fd;
 
         auto event = epoll_event {
