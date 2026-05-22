@@ -27,18 +27,19 @@ std::error_code TPoll::Init() noexcept {
 }
 
 void TPoll::RunOne() noexcept {
-    if (Fd < 0) {
+    if (Fd < 0 || MaxPollEvents < 1) {
         return;
     }
     const auto numberFd = epoll_wait(Fd, Events.data(), MaxPollEvents, MaxPollTimeOut);
 
     for (auto index = 0; index < numberFd; ++index) {
-        if (auto fd = Events[index].data.fd; Handlers.contains(fd)) {
+        const auto fd = Events[index].data.fd;
+        const auto events = Events[index].events;
+
+        if (Handlers.contains(fd) && (events & EPOLLIN) == events) {
             std::invoke(Handlers[fd]);
         }
     }
-
-    return;
 }
 
 }
