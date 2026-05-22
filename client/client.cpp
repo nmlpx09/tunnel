@@ -118,6 +118,8 @@ int main() {
         return 7;
     }
 
+    auto ctx = std::make_shared<NContext::TContext>();
+
     auto tun = std::make_shared<NTun::TTun>(MAX_DATA_SIZE);
 
     if (auto ec = tun->Init(tunDevice); ec) {
@@ -132,24 +134,22 @@ int main() {
         return 9;
     }
 
-    auto poll = std::make_shared<NPoll::TPoll>(MAX_EVENTS);
+    auto poll = std::make_shared<NPoll::TPoll>(MAX_POLL_EVENTS, MAX_POLL_TIMEOUT_MS);
 
     if (auto ec = poll->Init(); ec) {
         std::cerr << ec.message() << std::endl;
         return 10;
     }
 
-    if (auto ec = poll->Add(tun); ec) {
+    if (auto ec = poll->RegisterHandler(tun, [ctx] () { ctx->TunNotify(); }); ec) {
         std::cerr << ec.message() << std::endl;
         return 11;
     }
 
-    if (auto ec = poll->Add(socket); ec) {
+    if (auto ec = poll->RegisterHandler(socket, [ctx] () { ctx->SocketNotify(); }); ec) {
         std::cerr << ec.message() << std::endl;
         return 12;
     }
-
-    auto ctx = std::make_shared<NContext::TContext>();
 
     auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
 
@@ -171,19 +171,6 @@ int main() {
     std::cerr << "run client" << std::endl;
 
     while (true) {
-        poll->Wait();
-
-        if (poll->Contains(tun)) {
-            ctx->TunNotify();
-        }
-
-        if (poll->Contains(socket)) {
-            ctx->SocketNotify();
-        }
+        poll->RunOne();
     }
-
-    tTun.join();
-    tSocket.join();
-
-    std::cerr << "stop client" << std::endl;
 }
