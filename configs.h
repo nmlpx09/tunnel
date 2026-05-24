@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 static constexpr std::size_t MAX_POLL_EVENTS = 2;
 static constexpr std::int32_t MAX_POLL_TIMEOUT_MS = 1000;

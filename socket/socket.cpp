@@ -63,7 +63,7 @@ void TSocket::Write(
         return;
     }
 
-    const auto sockaddrRemote = sockaddr_in {
+    auto sockaddrRemote = sockaddr_in {
         .sin_family = AF_INET,
         .sin_port = htons(remotePort),
         .sin_addr = {
@@ -72,8 +72,21 @@ void TSocket::Write(
         .sin_zero = {0}
     };
 
-    sendto(Fd, buffer.data(), size, 0,
-        reinterpret_cast<const sockaddr*>(&sockaddrRemote), sizeof(sockaddrRemote));
+    iovec iov[] = {
+        { .iov_base = const_cast<std::uint8_t*>(buffer.data()), .iov_len = size }
+    };
+
+    msghdr msg = {
+        .msg_name = &sockaddrRemote,
+        .msg_namelen = sizeof(sockaddrRemote),
+        .msg_iov = iov,
+        .msg_iovlen = 1,
+        .msg_control = nullptr,
+        .msg_controllen = 0,
+        .msg_flags = 0
+    };
+
+    sendmsg(Fd, &msg, 0);
 }
 
 std::tuple<
@@ -87,11 +100,24 @@ std::tuple<
     }
 
     sockaddr_in sockaddrRemote;
-    std::uint32_t sockaddrSize;
 
-    const auto readSize = recvfrom(Fd, Buffer.data(), MaxBufferSize, 0, reinterpret_cast<sockaddr*>(&sockaddrRemote), &sockaddrSize);
+    iovec iov[] = {
+        { .iov_base = Buffer.data(), .iov_len = MaxBufferSize }
+    };
 
-    if (readSize <= 0 || sockaddrSize <= 0) {
+    msghdr msg = {
+        .msg_name = &sockaddrRemote,
+        .msg_namelen = sizeof(sockaddrRemote),
+        .msg_iov = iov,
+        .msg_iovlen = 1,
+        .msg_control = nullptr,
+        .msg_controllen = 0,
+        .msg_flags = 0
+    };
+
+    const auto readSize = recvmsg(Fd, &msg, 0);
+
+    if (readSize <= 0) {
         return {cref(Buffer), 0, {}, 0};
     }
 
