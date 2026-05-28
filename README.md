@@ -8,6 +8,11 @@ simple udp tunnel with aes128 crypt and without sessions or handshakes
 2. make
 3. libssl-dev
 
+# allows sytems
+
+1. linux
+2. rooted android with termux
+
 # confugure env
 
 TUN_DEVICE - tun device name  
@@ -47,3 +52,11 @@ tserver.sh start
 ## stop server
 
 tserver.sh stop
+
+## install termux
+
+make install_termux
+
+## uninstall termux
+
+make uninstall_termux

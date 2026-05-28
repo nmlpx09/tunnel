@@ -18,9 +18,9 @@ clean:
 
 install:
 	strip $(RUN)
-	cp $(RUN) /usr/bin/
-	cp $(RUN).sh /usr/bin/
+	cp $(RUN) /usr/bin/$(RUN)-bin
+	cp $(RUN).sh /usr/bin/$(RUN)
 
 uninstall:
-	rm /usr/bin/$(RUN)
+	rm /usr/bin/$(RUN)-bin
 	rm /usr/bin/$(RUN).sh

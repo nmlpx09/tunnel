@@ -2,14 +2,17 @@
 
 set -ex
 
-BIN_NAME=tclient
-TUN_DEVICE=tun0
 REMOTE_IP=77.91.92.110
 REMOTE_PORT=69
-LOCAL_PORT=1234
+
+TUN_DEVICE=tun0
 TUN_IP=10.0.3.2
-MTU=1460
-KEYS_FILE=/etc/tunnel/keys
+TUN_MTU=1460
+
+LOCAL_PORT=1234
+
+BIN_NAME=tclient-bin
+BIN_KEYS_FILE=/etc/tunnel/keys
 
 function test_sudo {
     if [ `whoami` != root ]; then
@@ -32,7 +35,7 @@ case $1 in
 
         ip tuntap add mode tun $TUN_DEVICE
         ip address add $TUN_IP/24 dev $TUN_DEVICE
-        ip link set dev $TUN_DEVICE mtu $MTU
+        ip link set dev $TUN_DEVICE mtu $TUN_MTU
         ip link set dev $TUN_DEVICE up
 
         ip route add $REMOTE_IP `ip route | grep '^default' | cut -d ' ' -f 2-`
@@ -43,10 +46,10 @@ case $1 in
         export REMOTE_IP=$REMOTE_IP
         export REMOTE_PORT=$REMOTE_PORT
         export LOCAL_PORT=$LOCAL_PORT
-        export MTU=$MTU
-        export KEYS_FILE=$KEYS_FILE
+        export MTU=$TUN_MTU
+        export KEYS_FILE=$BIN_KEYS_FILE
 
-        nice --15 $BIN_NAME |& logger -t tclient &
+        nice --15 $BIN_NAME |& logger -t $BIN_NAME &
         ;;
 
     "stop")

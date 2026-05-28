@@ -2,13 +2,15 @@
 
 set -ex
 
-BIN_NAME=tserver
 TUN_DEVICE=tun0
-NET_DEVICE=`ip route | grep '^default' | cut -d ' ' -f 5-`
-LOCAL_PORT=69
 TUN_IP=10.0.3.1
-MTU=1460
-KEYS_FILE=/etc/tunnel/keys
+TUN_MTU=1460
+
+LOCAL_DEVICE=`ip route get 1.1.1.1 | head -1 | cut -d ' ' -f 5`
+LOCAL_PORT=69
+
+BIN_NAME=tserver-bin
+BIN_KEYS_FILE=/etc/tunnel/keys
 
 function test_sudo {
     if [ `whoami` != root ]; then
@@ -31,19 +33,19 @@ case $1 in
 
         ip tuntap add mode tun $TUN_DEVICE
         ip address add $TUN_IP/24 dev $TUN_DEVICE
-        ip link set dev $TUN_DEVICE mtu $MTU
+        ip link set dev $TUN_DEVICE mtu $TUN_MTU
         ip link set dev $TUN_DEVICE up
 
         sysctl net.ipv4.ip_forward=1
 
-        iptables -t nat -A POSTROUTING -s $TUN_IP/24 -o $NET_DEVICE -j MASQUERADE
+        iptables -t nat -A POSTROUTING -s $TUN_IP/24 -o $LOCAL_DEVICE -j MASQUERADE
 
         export TUN_DEVICE=$TUN_DEVICE
         export LOCAL_PORT=$LOCAL_PORT
-        export MTU=$MTU
-        export KEYS_FILE=$KEYS_FILE
+        export MTU=$TUN_MTU
+        export KEYS_FILE=$BIN_KEYS_FILE
 
-        nice --15 $BIN_NAME |& logger -t tserver &
+        nice --15 $BIN_NAME |& logger -t $BIN_NAME &
         ;;
 
     "stop")
@@ -52,7 +54,7 @@ case $1 in
 
         ip link delete $TUN_DEVICE
 
-        iptables -t nat -D POSTROUTING -s $TUN_IP/24 -o $NET_DEVICE -j MASQUERADE
+        iptables -t nat -D POSTROUTING -s $TUN_IP/24 -o $LOCAL_DEVICE -j MASQUERADE
 
         pkill -9 $BIN_NAME
         ;;

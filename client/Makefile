@@ -18,17 +18,17 @@ clean:
 
 install:
 	strip $(RUN)
-	cp $(RUN) /usr/bin/
-	cp $(RUN).sh /usr/bin/
+	cp $(RUN) /usr/bin/$(RUN)-bin
+	cp $(RUN).sh /usr/bin/$(RUN)
 
 uninstall:
+	rm /usr/bin/$(RUN)-bin
 	rm /usr/bin/$(RUN)
-	rm /usr/bin/$(RUN).sh
 
 install_termux:
-	cp $(RUN) /data/data/com.termux/files/usr/bin/
-	cp $(RUN)_termux.sh /data/data/com.termux/files/usr/bin/$(RUN).sh
+	cp $(RUN) /data/data/com.termux/files/usr/bin/$(RUN)-bin
+	cp $(RUN)_termux.sh /data/data/com.termux/files/usr/bin/$(RUN)
 
 uninstall_termux:
+	rm /data/data/com.termux/files/usr/bin/$(RUN)-bin
 	rm /data/data/com.termux/files/usr/bin/$(RUN)
-	rm /data/data/com.termux/files/usr/bin/$(RUN).sh
