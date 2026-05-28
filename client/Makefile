@@ -24,3 +24,11 @@ install:
 uninstall:
 	rm /usr/bin/$(RUN)
 	rm /usr/bin/$(RUN).sh
+
+install_termux:
+	cp $(RUN) /data/data/com.termux/files/usr/bin/
+	cp $(RUN)_termux.sh /data/data/com.termux/files/usr/bin/$(RUN).sh
+
+uninstall_termux:
+	rm /data/data/com.termux/files/usr/bin/$(RUN)
+	rm /data/data/com.termux/files/usr/bin/$(RUN).sh
