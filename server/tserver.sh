@@ -27,7 +27,7 @@ function test_interface {
 }
 
 case $1 in
-    "start")
+    "c")
         test_sudo
         test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE exits" && exit 1
 
@@ -48,7 +48,7 @@ case $1 in
         nice --15 $BIN_NAME |& logger -t $BIN_NAME &
         ;;
 
-    "stop")
+    "d")
         test_sudo
         ! test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE not exits" && exit 1
 
