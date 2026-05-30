@@ -13,7 +13,7 @@
 #include <string>
 #include <thread>
 
-void readTun(
+void tx(
     NContext::TContextPtr ctx,
     NTun::TTunPtr tun,
     NSocket::TSocketPtr socket,
@@ -35,7 +35,7 @@ void readTun(
     }
 }
 
-void readSocket(
+void rx(
     NContext::TContextPtr ctx,
     NTun::TTunPtr tun,
     NSocket::TSocketPtr socket,
@@ -164,8 +164,8 @@ int main() {
         return 14;
     }
 
-    std::thread tTun(readTun, ctx, tun, socket, crypt, remoteIp, remotePort);
-    std::thread tSocket(readSocket, ctx, tun, socket, crypt, remoteIp, remotePort);
+    std::thread tTx(tx, ctx, tun, socket, crypt, remoteIp, remotePort);
+    std::thread tRx(rx, ctx, tun, socket, crypt, remoteIp, remotePort);
 
     std::cerr << "run client" << std::endl;
 
