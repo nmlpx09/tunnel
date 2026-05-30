@@ -10,7 +10,8 @@ LOCAL_DEVICE=`ip route get 1.1.1.1 | head -1 | cut -d ' ' -f 5`
 LOCAL_PORT=69
 
 BIN_NAME=tserver-bin
-BIN_KEYS_FILE=/etc/tunnel/keys
+
+KEYS_FILE=/etc/tunnel/keys
 
 function test_sudo {
     if [ `whoami` != root ]; then
@@ -41,9 +42,9 @@ case $1 in
         iptables -t nat -A POSTROUTING -s $TUN_IP/24 -o $LOCAL_DEVICE -j MASQUERADE
 
         export TUN_DEVICE=$TUN_DEVICE
+        export TUN_MTU=$TUN_MTU
         export LOCAL_PORT=$LOCAL_PORT
-        export MTU=$TUN_MTU
-        export KEYS_FILE=$BIN_KEYS_FILE
+        export KEYS_FILE=$KEYS_FILE
 
         nice --15 $BIN_NAME |& logger -t $BIN_NAME &
         ;;
@@ -53,6 +54,8 @@ case $1 in
         ! test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE not exits" && exit 1
 
         ip link delete $TUN_DEVICE
+
+        sysctl net.ipv4.ip_forward=0
 
         iptables -t nat -D POSTROUTING -s $TUN_IP/24 -o $LOCAL_DEVICE -j MASQUERADE
 

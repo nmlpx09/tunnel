@@ -55,11 +55,7 @@ void TSocket::Write(
     const std::string& remoteIp,
     std::uint16_t remotePort
 ) const noexcept {
-    if (Fd < 0) {
-        return;
-    }
-
-    if (size == 0) {
+    if (Fd < 0 || size == 0) {
         return;
     }
 

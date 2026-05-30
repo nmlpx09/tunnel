@@ -27,7 +27,7 @@ std::error_code TPoll::Init() noexcept {
 }
 
 void TPoll::RunOne() noexcept {
-    if (Fd < 0 || MaxPollEvents < 1) {
+    if (Fd < 0) {
         return;
     }
     const auto numberFd = epoll_wait(Fd, Events.data(), MaxPollEvents, MaxPollTimeOut);

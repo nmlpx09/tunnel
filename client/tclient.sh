@@ -12,7 +12,8 @@ TUN_MTU=1460
 LOCAL_PORT=1234
 
 BIN_NAME=tclient-bin
-BIN_KEYS_FILE=/etc/tunnel/keys
+
+KEYS_FILE=/etc/tunnel/keys
 
 function test_sudo {
     if [ `whoami` != root ]; then
@@ -42,12 +43,12 @@ case $1 in
         ip route add 128.0.0.0/1 dev $TUN_DEVICE
         ip route add 0.0.0.0/1 dev $TUN_DEVICE
 
-        export TUN_DEVICE=$TUN_DEVICE
         export REMOTE_IP=$REMOTE_IP
         export REMOTE_PORT=$REMOTE_PORT
+        export TUN_DEVICE=$TUN_DEVICE
+        export TUN_MTU=$TUN_MTU
         export LOCAL_PORT=$LOCAL_PORT
-        export MTU=$TUN_MTU
-        export KEYS_FILE=$BIN_KEYS_FILE
+        export KEYS_FILE=$KEYS_FILE
 
         nice --15 $BIN_NAME |& logger -t $BIN_NAME &
         ;;

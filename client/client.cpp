@@ -66,7 +66,7 @@ int main() {
     std::uint16_t remotePort = 0;
     const std::string localIp = "0.0.0.0";
     std::uint16_t localPort = 0;
-    std::size_t mtu = 0;
+    std::size_t tunMtu = 0;
     std::string keysFile;
 
     const auto env = NUtils::getEnv();
@@ -99,14 +99,14 @@ int main() {
         return 4;
     }
 
-    if (env.count("mtu") > 0) {
-        mtu = std::stoi(env.at("mtu"));
-        if (mtu > MAX_MTU_SIZE) {
-            std::cerr << "mtu must less then MAX_MTU_SIZE" << std::endl;
+    if (env.count("tunMtu") > 0) {
+        tunMtu = std::stoi(env.at("tunMtu"));
+        if (tunMtu > MAX_TUN_MTU_SIZE) {
+            std::cerr << "tun mtu must less then MAX_TUN_MTU_SIZE" << std::endl;
             return 5;
         }
     } else {
-        std::cerr << "export MTU env" << std::endl;
+        std::cerr << "export TUN_MTU env" << std::endl;
         return 6;
     }
 
@@ -140,12 +140,12 @@ int main() {
         return 10;
     }
 
-    if (auto ec = poll->RegisterHandlerIn(tun, [ctx] () { ctx->TunNotify(); }); ec) {
+    if (auto ec = poll->RegisterHandlerIn(tun, [ctx] { ctx->TunNotify(); }); ec) {
         std::cerr << ec.message() << std::endl;
         return 11;
     }
 
-    if (auto ec = poll->RegisterHandlerIn(socket, [ctx] () { ctx->SocketNotify(); }); ec) {
+    if (auto ec = poll->RegisterHandlerIn(socket, [ctx] { ctx->SocketNotify(); }); ec) {
         std::cerr << ec.message() << std::endl;
         return 12;
     }

@@ -34,8 +34,8 @@ std::unordered_map<std::string, std::string> getEnv() {
     if (std::getenv("LOCAL_PORT") != nullptr) {
         result.insert({"localPort", std::getenv("LOCAL_PORT")});
     }
-    if (std::getenv("MTU") != nullptr) {
-        result.insert({"mtu", std::getenv("MTU")});
+    if (std::getenv("TUN_MTU") != nullptr) {
+        result.insert({"tunMtu", std::getenv("TUN_MTU")});
     }
     if (std::getenv("KEYS_FILE") != nullptr) {
         result.insert({"keysFile", std::getenv("KEYS_FILE")});
