@@ -79,14 +79,24 @@ int main() {
     }
 
     if (env.count("localPort") > 0) {
-        localPort = std::stoi(env.at("localPort"));
+        try {
+            localPort = std::stoi(env.at("localPort"));
+        } catch (const std::exception&) {
+            std::cerr << "error convert LOCAL_PORT from string" << std::endl;
+            return 2;
+        }
     } else {
         std::cerr << "export LOCAL_PORT env" << std::endl;
-        return 4;
+        return 3;
     }
 
     if (env.count("tunMtu") > 0) {
-        tunMtu = std::stoi(env.at("tunMtu"));
+        try {
+            tunMtu = std::stoi(env.at("tunMtu"));
+        } catch (const std::exception&) {
+            std::cerr << "error convert TUN_MTU from string" << std::endl;
+            return 4;
+        }
         if (tunMtu > MAX_TUN_MTU_SIZE) {
             std::cerr << "tun mtu must less then MAX_TUN_MTU_SIZE" << std::endl;
             return 5;

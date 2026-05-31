@@ -10,7 +10,6 @@ TUN_IP=10.0.3.3
 TUN_MTU=1460
 
 LOCAL_DEVICE=`ip route get 1.1.1.1 | head -1 | cut -d ' ' -f 5`
-LOCAL_PORT=1234
 
 BIN_NAME=tclient-bin
 
@@ -50,7 +49,6 @@ case $1 in
         export REMOTE_PORT=$REMOTE_PORT
         export TUN_DEVICE=$TUN_DEVICE
         export TUN_MTU=$TUN_MTU
-        export LOCAL_PORT=$LOCAL_PORT
         export KEYS_FILE=$KEYS_FILE
 
         $BIN_NAME

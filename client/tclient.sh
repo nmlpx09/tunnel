@@ -9,8 +9,6 @@ TUN_DEVICE=tun0
 TUN_IP=10.0.3.2
 TUN_MTU=1460
 
-LOCAL_PORT=1234
-
 BIN_NAME=tclient-bin
 
 KEYS_FILE=/etc/tunnel/keys
@@ -47,7 +45,6 @@ case $1 in
         export REMOTE_PORT=$REMOTE_PORT
         export TUN_DEVICE=$TUN_DEVICE
         export TUN_MTU=$TUN_MTU
-        export LOCAL_PORT=$LOCAL_PORT
         export KEYS_FILE=$KEYS_FILE
 
         nice --15 $BIN_NAME |& logger -t $BIN_NAME &

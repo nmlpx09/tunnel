@@ -86,35 +86,47 @@ int main() {
     }
 
     if (env.count("remotePort") > 0) {
-        remotePort = std::stoi(env.at("remotePort"));
+        try {
+            remotePort = std::stoi(env.at("remotePort"));
+        } catch (const std::exception&) {
+            std::cerr << "error convert REMOTE_PORT from string" << std::endl;
+            return 3;
+        }
     } else {
         std::cerr << "export REMOTE_PORT env" << std::endl;
-        return 3;
-    }
-
-    if (env.count("localPort") > 0) {
-        localPort = std::stoi(env.at("localPort"));
-    } else {
-        std::cerr << "export LOCAL_PORT env" << std::endl;
         return 4;
     }
 
-    if (env.count("tunMtu") > 0) {
-        tunMtu = std::stoi(env.at("tunMtu"));
-        if (tunMtu > MAX_TUN_MTU_SIZE) {
-            std::cerr << "tun mtu must less then MAX_TUN_MTU_SIZE" << std::endl;
+    if (env.count("localPort") > 0) {
+        try {
+            localPort = std::stoi(env.at("localPort"));
+        } catch (const std::exception&) {
+            std::cerr << "error convert LOCAL_PORT from string" << std::endl;
             return 5;
+        }
+    }
+
+    if (env.count("tunMtu") > 0) {
+        try {
+            tunMtu = std::stoi(env.at("tunMtu"));
+        } catch (const std::exception&) {
+            std::cerr << "error convert TUN_MTU from string" << std::endl;
+            return 6;
+        }
+        if (tunMtu > MAX_TUN_MTU_SIZE) {
+            std::cerr << "tun mtu must less then TUN_MTU" << std::endl;
+            return 7;
         }
     } else {
         std::cerr << "export TUN_MTU env" << std::endl;
-        return 6;
+        return 8;
     }
 
     if (env.count("keysFile") > 0) {
         keysFile = env.at("keysFile");
     } else {
         std::cerr << "export KEYS_FILE env" << std::endl;
-        return 7;
+        return 9;
     }
 
     auto ctx = std::make_shared<NContext::TContext>();
@@ -123,31 +135,31 @@ int main() {
 
     if (auto ec = tun->Init(tunDevice); ec) {
         std::cerr << ec.message() << std::endl;
-        return 8;
+        return 10;
     }
 
     auto socket = std::make_shared<NSocket::TSocket>(MAX_DATA_SIZE);
 
     if (auto ec = socket->Init(localIp, localPort); ec) {
         std::cerr << ec.message() << std::endl;
-        return 9;
+        return 11;
     }
 
     auto poll = std::make_shared<NPoll::TPoll>(MAX_POLL_EVENTS, MAX_POLL_TIMEOUT_MS);
 
     if (auto ec = poll->Init(); ec) {
         std::cerr << ec.message() << std::endl;
-        return 10;
+        return 12;
     }
 
     if (auto ec = poll->RegisterHandlerIn(tun, [ctx] { ctx->TunNotify(); }); ec) {
         std::cerr << ec.message() << std::endl;
-        return 11;
+        return 13;
     }
 
     if (auto ec = poll->RegisterHandlerIn(socket, [ctx] { ctx->SocketNotify(); }); ec) {
         std::cerr << ec.message() << std::endl;
-        return 12;
+        return 14;
     }
 
     auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
@@ -156,12 +168,12 @@ int main() {
 
     if (!keyPair) {
         std::cerr << "failed load key pair" << std::endl;
-        return 13;
+        return 15;
     }
 
     if (auto ec = crypt->Init(keyPair->first, keyPair->second); ec) {
         std::cerr << ec.message() << std::endl;
-        return 14;
+        return 16;
     }
 
     std::thread tTx(tx, ctx, tun, socket, crypt, remoteIp, remotePort);
