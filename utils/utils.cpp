@@ -1,4 +1,7 @@
+#include "configs.h"
 #include "utils.h"
+
+#include <errors.h>
 
 #include <fstream>
 #include <cstdlib>
@@ -41,6 +44,67 @@ std::unordered_map<std::string, std::string> getEnv() {
         result.insert({"keysFile", std::getenv("KEYS_FILE")});
     }
     return result;
+}
+
+std::pair<std::error_code, TConf> getConf(bool isClient) {
+    const auto env = NUtils::getEnv();
+    TConf conf;
+
+    if (env.count("tunDevice") > 0) {
+        conf.TunDevice = env.at("tunDevice");
+    } else {
+        return {EErrorCode::TunDevice, {}};
+    }
+
+    if (env.count("tunMtu") > 0) {
+        std::size_t tunMtu = 0;
+        try {
+            tunMtu = std::stoi(env.at("tunMtu"));
+        } catch (const std::exception&) {
+            return {EErrorCode::TunMtuConvert, {}};
+        }
+        if (tunMtu > MAX_TUN_MTU_SIZE) {
+            return {EErrorCode::TunMtuMaxSize, {}};
+        }
+    } else {
+        return {EErrorCode::TunMtu, {}};
+    }
+
+    if (env.count("keysFile") > 0) {
+        conf.KeysFile = env.at("keysFile");
+    } else {
+        return {EErrorCode::KeysFile, {}};
+    }
+
+    if (isClient) {
+        if (env.count("remoteIp") > 0) {
+            conf.RemoteIp = env.at("remoteIp");
+        } else {
+            return {EErrorCode::RemoteIp, {}};
+        }
+
+        if (env.count("remotePort") > 0) {
+            try {
+                conf.RemotePort = std::stoi(env.at("remotePort"));
+            } catch (const std::exception&) {
+                return {EErrorCode::RemotePortConvert, {}};
+            }
+        } else {
+            return {EErrorCode::RemotePort, {}};
+        }
+    } else {
+        if (env.count("localPort") > 0) {
+            try {
+                conf.LocalPort = std::stoi(env.at("localPort"));
+            } catch (const std::exception&) {
+                return {EErrorCode::LocalPortConvert, {}};
+            }
+        } else {
+            return {EErrorCode::LocalPort, {}};
+        }
+    }
+
+    return {{}, std::move(conf)};
 }
 
 std::optional<std::pair<std::string, std::string>> loadKeyPair(const std::string& keysFile) {

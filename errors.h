@@ -15,6 +15,16 @@ enum EErrorCode {
     TunOpen,
     TunBind,
     TunConfig,
+    TunDevice,
+    TunMtu,
+    TunMtuConvert,
+    TunMtuMaxSize,
+    KeysFile,
+    RemoteIp,
+    RemotePort,
+    RemotePortConvert,
+    LocalPort,
+    LocalPortConvert,
 };
 
 namespace std {
@@ -55,6 +65,26 @@ public:
                 return "tun bind error";
             case TunConfig:
                 return "tun config error";
+            case TunDevice:
+                return "export TUN_DEVICE env";
+            case TunMtu:
+                return "export TUN_MTU env";
+            case TunMtuConvert:
+                return "convert TUN_MTU from string";
+            case TunMtuMaxSize:
+                return "tun mtu must less then MAX_TUN_MTU_SIZE";
+            case KeysFile:
+                return "export KEYS_FILE env";
+            case RemoteIp:
+                return "export REMOTE_IP env";
+            case RemotePort:
+                return "export REMOTE_PORT env";
+            case RemotePortConvert:
+                return "convert REMOTE_PORT from string";
+            case LocalPort:
+                return "export LOCAL_PORT env";
+            case LocalPortConvert:
+                return "convert LOCAL_PORT from string";
         }
 
         return "unknown error code: " + std::to_string(value);
