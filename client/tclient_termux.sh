@@ -51,7 +51,7 @@ case $1 in
         export TUN_MTU=$TUN_MTU
         export KEYS_FILE=$KEYS_FILE
 
-        nice --15 $BIN_NAME
+        setsid nice --15 $BIN_NAME
         ;;
 
     "d")
