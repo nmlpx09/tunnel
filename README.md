@@ -16,11 +16,11 @@ simple udp tunnel with aes128 crypt and without sessions or handshakes
 # confugure env
 
 TUN_DEVICE - tun device name  
-REMOTE_IP - server ip  
-REMOTE_PORT - server port  
-LOCAL_PORT- client port  
+TUN_MTU - mtu (1460 max)  
 TUN_IP - local tun ip  
-MTU - mtu (1460 max)  
+REMOTE_IP - server ip  
+REMOTE_PORT - remote server port  
+LOCAL_PORT- local server port  
 KEYS_FILE - file with key and iv  
 
 # command
@@ -37,22 +37,6 @@ make install
 
 make uninstall
 
-## start client
-
-tclient.sh start
-
-## stop client
-
-tclient.sh stop
-
-## start server
-
-tserver.sh start
-
-## stop server
-
-tserver.sh stop
-
 ## install termux
 
 make install_termux
@@ -60,3 +44,19 @@ make install_termux
 ## uninstall termux
 
 make uninstall_termux
+
+## start client
+
+tclient c
+
+## stop client
+
+tclient d
+
+## start server
+
+tserver c
+
+## stop server
+
+tserver d
