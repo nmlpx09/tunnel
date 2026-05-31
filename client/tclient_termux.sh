@@ -51,7 +51,7 @@ case $1 in
         export TUN_MTU=$TUN_MTU
         export KEYS_FILE=$KEYS_FILE
 
-        $BIN_NAME
+        nice --15 $BIN_NAME
         ;;
 
     "d")
@@ -61,6 +61,8 @@ case $1 in
         ip link delete $TUN_DEVICE
 
         ip route del table $LOCAL_DEVICE $REMOTE_IP
+
+        pkill -9 $BIN_NAME
         ;;
     *)
 esac
