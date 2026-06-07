@@ -11,16 +11,16 @@
 
 namespace NUtils {
 
-bool validIpDatagram(const TBuffer& buffer, std::size_t size) noexcept;
+bool ValidIpDatagram(const TBuffer& buffer, std::size_t size) noexcept;
 
-std::uint32_t getSrcIp(const TBuffer& buffer) noexcept;
+std::uint32_t GetSrcIp(const TBuffer& buffer) noexcept;
 
-std::uint32_t getDstIp(const TBuffer& buffer) noexcept;
+std::uint32_t GetDstIp(const TBuffer& buffer) noexcept;
 
-std::unordered_map<std::string, std::string> getEnv() noexcept;
+std::unordered_map<std::string, std::string> GetEnv() noexcept;
 
-std::optional<std::pair<std::string, std::string>> loadKeyPair(const std::string& keysFile) noexcept;
+std::optional<std::pair<std::string, std::string>> LoadKeyPair(const std::string& keysFile) noexcept;
 
-std::pair<std::error_code, TConf> getConf(bool isClient = true) noexcept;
+std::pair<std::error_code, TConf> GetConf(bool isClient = true) noexcept;
 
 }

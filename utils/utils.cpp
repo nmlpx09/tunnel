@@ -8,22 +8,22 @@
 
 namespace NUtils {
 
-bool validIpDatagram(const TBuffer& buffer, std::size_t size) noexcept {
+bool ValidIpDatagram(const TBuffer& buffer, std::size_t size) noexcept {
     if (size < 24) {
         return false;
     }
     return *reinterpret_cast<const std::uint32_t*>(buffer.data()) == 0x80000;
 }
 
-std::uint32_t getSrcIp(const TBuffer& buffer) noexcept {
+std::uint32_t GetSrcIp(const TBuffer& buffer) noexcept {
     return *reinterpret_cast<const std::uint32_t*>(buffer.data() + 16);
 }
 
-std::uint32_t getDstIp(const TBuffer& buffer) noexcept {
+std::uint32_t GetDstIp(const TBuffer& buffer) noexcept {
     return *reinterpret_cast<const std::uint32_t*>(buffer.data() + 20);
 }
 
-std::unordered_map<std::string, std::string> getEnv() noexcept {
+std::unordered_map<std::string, std::string> GetEnv() noexcept {
     std::unordered_map<std::string, std::string> result;
     if (std::getenv("TUN_DEVICE") != nullptr) {
         result.insert({"tunDevice", std::getenv("TUN_DEVICE")});
@@ -46,8 +46,8 @@ std::unordered_map<std::string, std::string> getEnv() noexcept {
     return result;
 }
 
-std::pair<std::error_code, TConf> getConf(bool isClient) noexcept {
-    const auto env = NUtils::getEnv();
+std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
+    const auto env = GetEnv();
     TConf conf;
 
     if (env.count("tunDevice") > 0) {
@@ -107,7 +107,7 @@ std::pair<std::error_code, TConf> getConf(bool isClient) noexcept {
     return {{}, std::move(conf)};
 }
 
-std::optional<std::pair<std::string, std::string>> loadKeyPair(const std::string& keysFile) noexcept {
+std::optional<std::pair<std::string, std::string>> LoadKeyPair(const std::string& keysFile) noexcept {
     std::ifstream file(keysFile);
     std::string chiper;
     std::string iv;

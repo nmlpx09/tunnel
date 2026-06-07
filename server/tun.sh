@@ -2,14 +2,14 @@
 
 set -ex
 
-REMOTE_IP=77.91.92.110
-REMOTE_PORT=69
-
 TUN_DEVICE=tun0
-TUN_IP=10.0.3.2
+TUN_IP=10.0.3.1
 TUN_MTU=1460
 
-BIN_NAME=tclient-bin
+LOCAL_DEVICE=`ip route get 1.1.1.1 | head -1 | cut -d ' ' -f 5`
+LOCAL_PORT=69
+
+BIN_NAME=tun0
 
 KEYS_FILE=/etc/tunnel/keys
 
@@ -37,14 +37,13 @@ case $1 in
         ip link set dev $TUN_DEVICE mtu $TUN_MTU
         ip link set dev $TUN_DEVICE up
 
-        ip route add $REMOTE_IP `ip route | grep '^default' | cut -d ' ' -f 2-`
-        ip route add 128.0.0.0/1 dev $TUN_DEVICE
-        ip route add 0.0.0.0/1 dev $TUN_DEVICE
+        sysctl net.ipv4.ip_forward=1
 
-        export REMOTE_IP=$REMOTE_IP
-        export REMOTE_PORT=$REMOTE_PORT
+        iptables -t nat -A POSTROUTING -s $TUN_IP/24 -o $LOCAL_DEVICE -j MASQUERADE
+
         export TUN_DEVICE=$TUN_DEVICE
         export TUN_MTU=$TUN_MTU
+        export LOCAL_PORT=$LOCAL_PORT
         export KEYS_FILE=$KEYS_FILE
 
         nice --15 $BIN_NAME |& logger -t $BIN_NAME &
@@ -54,11 +53,13 @@ case $1 in
         test_sudo
         ! test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE not exits" && exit 1
 
+        pkill -9 $BIN_NAME
+
         ip link delete $TUN_DEVICE
 
-        ip route del $REMOTE_IP
+        sysctl net.ipv4.ip_forward=0
 
-        pkill -9 $BIN_NAME
+        iptables -t nat -D POSTROUTING -s $TUN_IP/24 -o $LOCAL_DEVICE -j MASQUERADE
         ;;
     *)
 esac

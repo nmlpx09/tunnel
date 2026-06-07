@@ -24,10 +24,10 @@ void tx(
         if (size == 0) {
             ctx->TunReset();
             continue;
-        } else if (!NUtils::validIpDatagram(buffer, size)) {
+        } else if (!NUtils::ValidIpDatagram(buffer, size)) {
             continue;
         }
-        if (const auto value = ipsStorage->Get(NUtils::getDstIp(buffer)); value) {
+        if (const auto value = ipsStorage->Get(NUtils::GetDstIp(buffer)); value) {
             const auto& [encrBuffer, encrSize] = crypt->Encrypt(buffer, size);
             socket->Write(encrBuffer, encrSize, value->first, value->second);
         }
@@ -49,18 +49,18 @@ void rx(
             continue;
         }
         const auto& [decrBuffer, decrSize] = crypt->Decrypt(buffer, size);
-        if (!NUtils::validIpDatagram(decrBuffer, decrSize)) {
+        if (!NUtils::ValidIpDatagram(decrBuffer, decrSize)) {
             continue;
         }
 
-        ipsStorage->Add(NUtils::getSrcIp(decrBuffer), ip, port);
+        ipsStorage->Add(NUtils::GetSrcIp(decrBuffer), ip, port);
 
         tun->Write(decrBuffer, decrSize);
     }
 }
 
 int main() {
-    const auto& [ec, conf] = NUtils::getConf(false);
+    const auto& [ec, conf] = NUtils::GetConf(false);
 
     if (ec) {
          std::cerr << "get conf error: " << ec.message() << std::endl;
@@ -104,7 +104,7 @@ int main() {
 
     auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
 
-    auto keyPair = NUtils::loadKeyPair(conf.KeysFile);
+    auto keyPair = NUtils::LoadKeyPair(conf.KeysFile);
 
     if (!keyPair) {
         std::cerr << "failed load key pair" << std::endl;
