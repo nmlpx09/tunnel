@@ -45,18 +45,10 @@ make install_termux
 
 make uninstall_termux
 
-## start client
+## start
 
-tclient c
+tun c
 
-## stop client
+## stop
 
-tclient d
-
-## start server
-
-tserver c
-
-## stop server
-
-tserver d
+tun d
