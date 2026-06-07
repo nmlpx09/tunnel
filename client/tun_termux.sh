@@ -56,11 +56,10 @@ case $1 in
 
     "d")
         test_sudo
-        ! test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE not exits" && exit 1
 
         pkill -9 $BIN_NAME || :
 
-        ip link delete $TUN_DEVICE
+        ip link delete $TUN_DEVICE || :
 
         ip route del table $LOCAL_DEVICE $REMOTE_IP || :
         ;;
