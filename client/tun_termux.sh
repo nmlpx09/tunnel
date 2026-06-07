@@ -11,7 +11,7 @@ TUN_MTU=1460
 
 LOCAL_DEVICE=`ip route get 1.1.1.1 | head -1 | cut -d ' ' -f 5`
 
-BIN_NAME=tc0
+BIN_NAME=tun0
 
 KEYS_FILE=/data/data/com.termux/files/usr/etc/tunnel/keys
 
@@ -34,7 +34,7 @@ case $1 in
         test_sudo
 
         test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE exits" && exit 1
-        ! test_interface $LOCAL_DEVICE && echo "interface $LOCAL_DEVICE not exits" && continue
+        ! test_interface $LOCAL_DEVICE && echo "interface $LOCAL_DEVICE not exits" && exit 1
 
         ip tuntap add mode tun $TUN_DEVICE
         ip address add $TUN_IP/24 dev $TUN_DEVICE
@@ -58,11 +58,11 @@ case $1 in
         test_sudo
         ! test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE not exits" && exit 1
 
-        pkill -9 $BIN_NAME
+        pkill -9 $BIN_NAME || :
 
         ip link delete $TUN_DEVICE
 
-        ip route del table $LOCAL_DEVICE $REMOTE_IP
+        ip route del table $LOCAL_DEVICE $REMOTE_IP || :
         ;;
     *)
 esac
