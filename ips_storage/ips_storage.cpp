@@ -13,7 +13,7 @@ void TIpsStorage::Add(std::uint32_t key, const std::string& ip, std::uint16_t po
         LiveTime = now;
         Map.clear();
     }
-    Map[key] = TElement{std::move(ip), port};
+    Map[key] = TElement{ip, port};
 }
 
 std::optional<std::pair<std::string, std::uint16_t>> TIpsStorage::Get(std::uint32_t key) noexcept {
