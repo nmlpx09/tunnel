@@ -10,14 +10,19 @@ TCrypt::TCrypt(std::size_t maxBufferSize) noexcept
 : EncBuffer(maxBufferSize + AES_BLOCK_SIZE, 0)
 , DecBuffer(maxBufferSize + AES_BLOCK_SIZE, 0) {}
 
-std::error_code TCrypt::Init(const std::string& chiper, const std::string& iv) noexcept {
+std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) noexcept {
+
+    if (cipher.size() != 32 || iv.size() != 32) {
+        return EErrorCode::KeySize;
+    }
+
     if (auto ret = EVP_EncryptInit_ex(EncCtx.get(), EVP_aes_128_cbc(), nullptr,
-            reinterpret_cast<const unsigned char*>(chiper.c_str()), reinterpret_cast<const unsigned char*>(iv.c_str())); ret == 0) {
+            reinterpret_cast<const unsigned char*>(cipher.c_str()), reinterpret_cast<const unsigned char*>(iv.c_str())); ret == 0) {
         return EErrorCode::InitEncrypt;
     }
 
     if (auto ret = EVP_DecryptInit_ex(DecCtx.get(), EVP_aes_128_cbc(), nullptr,
-            reinterpret_cast<const unsigned char*>(chiper.c_str()), reinterpret_cast<const unsigned char*>(iv.c_str())); ret == 0) {
+            reinterpret_cast<const unsigned char*>(cipher.c_str()), reinterpret_cast<const unsigned char*>(iv.c_str())); ret == 0) {
         return EErrorCode::InitDecrypt;
     }
 

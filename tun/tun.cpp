@@ -13,8 +13,10 @@
 namespace NTun {
 
 TTun::~TTun() {
-    close(Fd);
-    Fd = -1;
+    if (Fd >= 0) {
+        close(Fd);
+        Fd = -1;
+    }
 }
 
 TTun::TTun(std::size_t maxBufferSize) noexcept
@@ -29,7 +31,8 @@ std::error_code TTun::Init(const std::string& deviceName) noexcept {
     ifreq ifr;
     std::memset(&ifr, 0, sizeof(ifr));
     ifr.ifr_flags = IFF_TUN;
-    std::strncpy(ifr.ifr_name, deviceName.c_str(), deviceName.size());
+    std::strncpy(ifr.ifr_name, deviceName.c_str(), IFNAMSIZ - 1);
+    ifr.ifr_name[IFNAMSIZ - 1] = '\0';
 
     if (auto ret = ioctl(Fd, TUNSETIFF, &ifr); ret < 0) {
         return EErrorCode::TunBind;
@@ -46,7 +49,11 @@ void TTun::Write(const TBuffer& buffer, std::size_t size) const noexcept {
         return;
     }
 
-    write(Fd, buffer.data(), size);
+    const auto writeSize = write(Fd, buffer.data(), size);
+
+    if (writeSize < 0) {
+        return;
+    }
 }
 
 std::tuple<

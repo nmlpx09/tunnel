@@ -4,7 +4,7 @@
 #include <errors.h>
 
 #include <fstream>
-#include <cstdlib>
+#include <cstring>
 
 namespace NUtils {
 
@@ -12,15 +12,22 @@ bool ValidIpDatagram(const TBuffer& buffer, std::size_t size) noexcept {
     if (size < 24) {
         return false;
     }
-    return *reinterpret_cast<const std::uint32_t*>(buffer.data()) == 0x80000;
+
+    std::uint32_t val;
+    std::memcpy(&val, buffer.data(), sizeof(val));
+    return val == 0x80000;
 }
 
 std::uint32_t GetSrcIp(const TBuffer& buffer) noexcept {
-    return *reinterpret_cast<const std::uint32_t*>(buffer.data() + 16);
+    std::uint32_t val;
+    std::memcpy(&val, buffer.data() + 16, sizeof(val));
+    return val;
 }
 
 std::uint32_t GetDstIp(const TBuffer& buffer) noexcept {
-    return *reinterpret_cast<const std::uint32_t*>(buffer.data() + 20);
+    std::uint32_t val;
+    std::memcpy(&val, buffer.data() + 20, sizeof(val));
+    return val;
 }
 
 std::unordered_map<std::string, std::string> GetEnv() noexcept {
@@ -109,12 +116,12 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
 
 std::optional<std::pair<std::string, std::string>> LoadKeyPair(const std::string& keysFile) noexcept {
     std::ifstream file(keysFile);
-    std::string chiper;
+    std::string cipher;
     std::string iv;
-    if (!file.is_open() || !std::getline(file, chiper) || !std::getline(file, iv)) {
+    if (!file.is_open() || !std::getline(file, cipher) || !std::getline(file, iv)) {
         return {};
     }
-    return std::make_pair(chiper, iv);
+    return std::make_pair(cipher, iv);
 }
 
 }

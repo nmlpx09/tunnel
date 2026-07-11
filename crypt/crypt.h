@@ -22,7 +22,7 @@ public:
     TCrypt& operator=(TCrypt&&) = delete;
     ~TCrypt() = default;
 
-    std::error_code Init(const std::string& chiper, const std::string& iv) noexcept;
+    std::error_code Init(const std::string& cipher, const std::string& iv) noexcept;
 
     std::tuple<
         std::reference_wrapper<const TBuffer>,

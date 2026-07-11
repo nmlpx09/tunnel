@@ -17,7 +17,6 @@ simple udp tunnel with aes128 crypt and without sessions or handshakes
 
 TUN_DEVICE - tun device name  
 TUN_MTU - mtu (1460 max)  
-TUN_IP - local tun ip  
 REMOTE_IP - server ip  
 REMOTE_PORT - remote server port  
 LOCAL_PORT- local server port  

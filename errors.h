@@ -4,6 +4,7 @@
 
 enum EErrorCode {
     Ok,
+    KeySize,
     InitEncrypt,
     InitDecrypt,
     EpollAdd,
@@ -36,13 +37,15 @@ template<> struct is_error_code_enum<EErrorCode> : std::true_type{};
 class TErrorCategory final : public std::error_category {
 public:
     const char* name() const noexcept override {
-        return "tnnel error";
+        return "tunnel error";
     }
 
     std::string message(int value) const override {
         switch (value) {
             case Ok:
                 return "ok";
+            case KeySize:
+                return "key size error";
             case InitEncrypt:
                 return "init encrypt error";
             case InitDecrypt:

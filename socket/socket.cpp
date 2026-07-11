@@ -10,8 +10,10 @@
 namespace NSocket {
 
 TSocket::~TSocket() {
-    close(Fd);
-    Fd = -1;
+    if (Fd >= 0) {
+        close(Fd);
+        Fd = -1;
+    }
 }
 
 TSocket::TSocket(std::size_t maxBufferSize) noexcept
@@ -72,7 +74,7 @@ void TSocket::Write(
         { .iov_base = const_cast<std::uint8_t*>(buffer.data()), .iov_len = size }
     };
 
-    msghdr msg = {
+    const msghdr msg = {
         .msg_name = &sockaddrRemote,
         .msg_namelen = sizeof(sockaddrRemote),
         .msg_iov = iov,
@@ -82,7 +84,11 @@ void TSocket::Write(
         .msg_flags = 0
     };
 
-    sendmsg(Fd, &msg, 0);
+    const auto writeSize = sendmsg(Fd, &msg, 0);
+
+    if (writeSize < 0) {
+        return;
+    }
 }
 
 std::tuple<
@@ -117,7 +123,17 @@ std::tuple<
         return {cref(Buffer), 0, {}, 0};
     }
 
-    return {cref(Buffer), readSize, inet_ntoa(sockaddrRemote.sin_addr), htons(sockaddrRemote.sin_port)};
+    std::string ip(INET_ADDRSTRLEN, '\0');
+
+    if (inet_ntop(AF_INET, &sockaddrRemote.sin_addr, const_cast<char*>(ip.c_str()), INET_ADDRSTRLEN) == nullptr) {
+        return {cref(Buffer), 0, {}, 0};
+    }
+
+    ip.resize(ip.find('\0'));
+
+    auto port = htons(sockaddrRemote.sin_port);
+
+    return {cref(Buffer), readSize, ip, port};
 }
 
 }

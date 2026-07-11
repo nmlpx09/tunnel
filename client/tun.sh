@@ -2,7 +2,7 @@
 
 set -ex
 
-REMOTE_IP=
+REMOTE_IP=158.255.0.70
 REMOTE_PORT=69
 
 TUN_DEVICE=tun0
@@ -47,7 +47,7 @@ case $1 in
         export TUN_MTU=$TUN_MTU
         export KEYS_FILE=$KEYS_FILE
 
-        nice --15 $BIN_NAME |& logger -t $BIN_NAME &
+        ./tun
         ;;
 
     "d")
