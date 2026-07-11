@@ -47,7 +47,7 @@ case $1 in
         export TUN_MTU=$TUN_MTU
         export KEYS_FILE=$KEYS_FILE
 
-        ./tun
+        nice --15 $BIN_NAME |& logger -t $BIN_NAME &
         ;;
 
     "d")
