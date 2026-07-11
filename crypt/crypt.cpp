@@ -3,6 +3,7 @@
 #include <errors.h>
 
 #include <openssl/aes.h>
+#include <openssl/evp.h>
 
 namespace NCrypt {
 
@@ -11,20 +12,40 @@ TCrypt::TCrypt(std::size_t maxBufferSize)
 , DecBuffer(maxBufferSize + AES_BLOCK_SIZE, 0) {}
 
 std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) noexcept {
+    EVP_ENCODE_CTX* ctx = EVP_ENCODE_CTX_new();
+    EVP_DecodeInit(ctx);
 
-    if (cipher.size() != 32 || iv.size() != 32) {
+    TBuffer decodeCipher(cipher.size(), 0);
+    std::int32_t decodeCipherSize;
+    std::int32_t decodeCipherSizeFinal;
+
+    EVP_DecodeUpdate(ctx, decodeCipher.data(), &decodeCipherSize, reinterpret_cast<const unsigned char*>(cipher.c_str()), cipher.size());
+    EVP_DecodeFinal(ctx, decodeCipher.data() + decodeCipherSize, &decodeCipherSizeFinal);
+
+    if (decodeCipherSize + decodeCipherSizeFinal != 16) {
         return EErrorCode::KeySize;
     }
 
-    if (auto ret = EVP_EncryptInit_ex(EncCtx.get(), EVP_aes_128_cbc(), nullptr,
-            reinterpret_cast<const unsigned char*>(cipher.c_str()), reinterpret_cast<const unsigned char*>(iv.c_str())); ret == 0) {
+    TBuffer decodeIv(iv.size(), 0);
+    std::int32_t decodeIvSize;
+    std::int32_t decodeIvSizeFinal;
+
+    EVP_DecodeUpdate(ctx, decodeIv.data(), &decodeIvSize, reinterpret_cast<const unsigned char*>(iv.c_str()), iv.size());
+    EVP_DecodeFinal(ctx, decodeIv.data() + decodeIvSize, &decodeIvSizeFinal);
+
+    if (decodeIvSize + decodeIvSizeFinal != 16) {
+        return EErrorCode::KeySize;
+    }
+
+    if (auto ret = EVP_EncryptInit_ex(EncCtx.get(), EVP_aes_128_cbc(), nullptr, decodeCipher.data(), decodeIv.data()); ret == 0) {
         return EErrorCode::InitEncrypt;
     }
 
-    if (auto ret = EVP_DecryptInit_ex(DecCtx.get(), EVP_aes_128_cbc(), nullptr,
-            reinterpret_cast<const unsigned char*>(cipher.c_str()), reinterpret_cast<const unsigned char*>(iv.c_str())); ret == 0) {
+    if (auto ret = EVP_DecryptInit_ex(DecCtx.get(), EVP_aes_128_cbc(), nullptr, decodeCipher.data(), decodeIv.data()); ret == 0) {
         return EErrorCode::InitDecrypt;
     }
+
+    EVP_ENCODE_CTX_free(ctx);
 
     return {};
 }

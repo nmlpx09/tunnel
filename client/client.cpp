@@ -111,8 +111,6 @@ int main() {
 
         std::thread tTx(tx, ctx, tun, socket, crypt, conf);
         std::thread tRx(rx, ctx, tun, socket, crypt, conf);
-        tTx.detach();
-        tRx.detach();
 
         std::cerr << "run client" << std::endl;
 
@@ -120,6 +118,8 @@ int main() {
             poll->RunOne();
         }
 
+        tTx.join();
+        tRx.join();
     } catch(const std::exception& exc) {
         std::cerr << exc.what() << std::endl;
         return 9;

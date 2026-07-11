@@ -20,7 +20,7 @@ TUN_MTU - mtu (1460 max)
 REMOTE_IP - server ip  
 REMOTE_PORT - remote server port  
 LOCAL_PORT- local server port  
-KEYS_FILE - file with key and iv  
+KEYS_FILE - file with key and iv in base64  
 
 # command
 

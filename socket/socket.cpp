@@ -129,7 +129,9 @@ std::tuple<
         return {cref(Buffer), 0, {}, 0};
     }
 
-    ip.resize(ip.find('\0'));
+    if(auto pos = ip.find('\0'); pos != ip.npos) {
+        ip.resize(pos);
+    }
 
     auto port = ntohs(sockaddrRemote.sin_port);
 

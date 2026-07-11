@@ -117,14 +117,15 @@ int main() {
 
         std::thread tTx(tx, ctx, tun, socket, crypt, ipsStorage);
         std::thread tRx(rx, ctx, tun, socket, crypt, ipsStorage);
-        tTx.detach();
-        tRx.detach();
 
         std::cerr << "run server" << std::endl;
 
         while (true) {
             poll->RunOne();
         }
+
+        tTx.join();
+        tRx.join();
     } catch (const std::exception& exc) {
         std::cerr << exc.what() << std::endl;
         return 9;
