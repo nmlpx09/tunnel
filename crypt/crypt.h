@@ -15,7 +15,7 @@ namespace NCrypt {
 
 struct TCrypt {
 public:
-    TCrypt(std::size_t maxBufferSize) noexcept;
+    TCrypt(std::size_t maxBufferSize);
     TCrypt(const TCrypt&) = delete;
     TCrypt(TCrypt&&) = delete;
     TCrypt& operator=(const TCrypt&) = delete;

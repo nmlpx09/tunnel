@@ -11,7 +11,7 @@ TPoll::~TPoll() {
     }
 }
 
-TPoll::TPoll(std::size_t maxPollEvents, std::int32_t maxPollTimeOut) noexcept
+TPoll::TPoll(std::size_t maxPollEvents, std::int32_t maxPollTimeOut)
 : MaxPollEvents(maxPollEvents)
 , MaxPollTimeOut(maxPollTimeOut) { }
 

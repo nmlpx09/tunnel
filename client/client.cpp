@@ -21,7 +21,6 @@ void tx(
         ctx->TunWait();
         const auto& [buffer, size] = tun->Read();
         if (size == 0) {
-            ctx->TunReset();
             continue;
         } else if (!NUtils::ValidIpDatagram(buffer, size)) {
             continue;
@@ -42,7 +41,6 @@ void rx(
         ctx->SocketWait();
         const auto& [buffer, size, ip, port] = socket->Read();
         if (size == 0) {
-            ctx->SocketReset();
             continue;
         } else if (conf.RemoteIp != ip || port != conf.RemotePort) {
             continue;
@@ -56,66 +54,74 @@ void rx(
 }
 
 int main() {
-    const auto& [ec, conf] = NUtils::GetConf();
+    try {
+        const auto& [ec, conf] = NUtils::GetConf();
 
-    if (ec) {
-         std::cerr << "get conf error: " << ec.message() << std::endl;
-         return 1;
-    }
+        if (ec) {
+             std::cerr << "get conf error: " << ec.message() << std::endl;
+             return 1;
+        }
 
-    auto ctx = std::make_shared<NContext::TContext>();
+        auto ctx = std::make_shared<NContext::TContext>();
 
-    auto tun = std::make_shared<NTun::TTun>(MAX_DATA_SIZE);
+        auto tun = std::make_shared<NTun::TTun>(MAX_DATA_SIZE);
 
-    if (auto ec = tun->Init(conf.TunDevice); ec) {
-        std::cerr << ec.message() << std::endl;
-        return 2;
-    }
+        if (auto ec = tun->Init(conf.TunDevice); ec) {
+            std::cerr << ec.message() << std::endl;
+            return 2;
+        }
 
-    auto socket = std::make_shared<NSocket::TSocket>(MAX_DATA_SIZE);
+        auto socket = std::make_shared<NSocket::TSocket>(MAX_DATA_SIZE);
 
-    if (auto ec = socket->Init(conf.LocalIp, conf.LocalPort); ec) {
-        std::cerr << ec.message() << std::endl;
-        return 3;
-    }
+        if (auto ec = socket->Init(conf.LocalIp, conf.LocalPort); ec) {
+            std::cerr << ec.message() << std::endl;
+            return 3;
+        }
 
-    auto poll = std::make_shared<NPoll::TPoll>(MAX_POLL_EVENTS, MAX_POLL_TIMEOUT_MS);
+        auto poll = std::make_shared<NPoll::TPoll>(MAX_POLL_EVENTS, MAX_POLL_TIMEOUT_MS);
 
-    if (auto ec = poll->Init(); ec) {
-        std::cerr << ec.message() << std::endl;
-        return 4;
-    }
+        if (auto ec = poll->Init(); ec) {
+            std::cerr << ec.message() << std::endl;
+            return 4;
+        }
 
-    if (auto ec = poll->RegisterHandlerIn(tun, [ctx] { ctx->TunNotify(); }); ec) {
-        std::cerr << ec.message() << std::endl;
-        return 5;
-    }
+        if (auto ec = poll->RegisterHandlerIn(tun, [ctx] { ctx->TunNotify(); }); ec) {
+            std::cerr << ec.message() << std::endl;
+            return 5;
+        }
 
-    if (auto ec = poll->RegisterHandlerIn(socket, [ctx] { ctx->SocketNotify(); }); ec) {
-        std::cerr << ec.message() << std::endl;
-        return 6;
-    }
+        if (auto ec = poll->RegisterHandlerIn(socket, [ctx] { ctx->SocketNotify(); }); ec) {
+            std::cerr << ec.message() << std::endl;
+            return 6;
+        }
 
-    auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
+        auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
 
-    const auto keyPair = NUtils::LoadKeyPair(conf.KeysFile);
+        const auto keyPair = NUtils::LoadKeyPair(conf.KeysFile);
 
-    if (!keyPair) {
-        std::cerr << "failed load key pair" << std::endl;
-        return 7;
-    }
+        if (!keyPair) {
+            std::cerr << "failed load key pair" << std::endl;
+            return 7;
+        }
 
-    if (auto ec = crypt->Init(keyPair->first, keyPair->second); ec) {
-        std::cerr << ec.message() << std::endl;
-        return 8;
-    }
+        if (auto ec = crypt->Init(keyPair->first, keyPair->second); ec) {
+            std::cerr << ec.message() << std::endl;
+            return 8;
+        }
 
-    std::thread tTx(tx, ctx, tun, socket, crypt, conf);
-    std::thread tRx(rx, ctx, tun, socket, crypt, conf);
+        std::thread tTx(tx, ctx, tun, socket, crypt, conf);
+        std::thread tRx(rx, ctx, tun, socket, crypt, conf);
+        tTx.detach();
+        tRx.detach();
 
-    std::cerr << "run client" << std::endl;
+        std::cerr << "run client" << std::endl;
 
-    while (true) {
-        poll->RunOne();
+        while (true) {
+            poll->RunOne();
+        }
+
+    } catch(const std::exception& exc) {
+        std::cerr << exc.what() << std::endl;
+        return 9;
     }
 }

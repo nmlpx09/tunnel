@@ -17,7 +17,7 @@ struct TPoll {
 private:
     using TTask = std::function<void()>;
 public:
-    TPoll(std::size_t maxPollEvents, std::int32_t maxPollTimeOut) noexcept;
+    TPoll(std::size_t maxPollEvents, std::int32_t maxPollTimeOut);
     TPoll(const TPoll&) = delete;
     TPoll(TPoll&&) = delete;
     TPoll& operator=(const TPoll&) = delete;

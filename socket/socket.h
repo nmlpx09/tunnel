@@ -14,7 +14,7 @@ namespace NSocket {
 
 struct TSocket {
 public:
-    TSocket(std::size_t maxBufferSize) noexcept;
+    TSocket(std::size_t maxBufferSize);
     TSocket(const TSocket&) = delete;
     TSocket(TSocket&&) = delete;
     TSocket& operator=(const TSocket&) = delete;

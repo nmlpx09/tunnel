@@ -19,7 +19,7 @@ TTun::~TTun() {
     }
 }
 
-TTun::TTun(std::size_t maxBufferSize) noexcept
+TTun::TTun(std::size_t maxBufferSize)
 : MaxBufferSize(maxBufferSize)
 , Buffer(MaxBufferSize, 0) { }
 

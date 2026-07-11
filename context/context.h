@@ -20,8 +20,6 @@ public:
     void SocketWait() noexcept;
     void TunNotify() noexcept;
     void SocketNotify() noexcept;
-    void TunReset() noexcept;
-    void SocketReset() noexcept;
 private:
     std::mutex TunMutex;
     std::mutex SocketMutex;

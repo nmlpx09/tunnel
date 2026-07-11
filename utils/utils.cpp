@@ -15,7 +15,7 @@ bool ValidIpDatagram(const TBuffer& buffer, std::size_t size) noexcept {
 
     std::uint32_t val;
     std::memcpy(&val, buffer.data(), sizeof(val));
-    return val == 0x80000;
+    return val == 0x00080000;
 }
 
 std::uint32_t GetSrcIp(const TBuffer& buffer) noexcept {

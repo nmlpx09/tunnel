@@ -26,14 +26,4 @@ void TContext::SocketNotify() noexcept {
     SocketCv.notify_one();
 }
 
-void TContext::TunReset() noexcept {
-    std::unique_lock<std::mutex> ulock{TunMutex};
-    TunReady = 0;
-}
-
-void TContext::SocketReset() noexcept {
-    std::unique_lock<std::mutex> ulock{SocketMutex};
-    SocketReady = 0;
-}
-
 }

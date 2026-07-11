@@ -6,7 +6,7 @@
 
 namespace NCrypt {
 
-TCrypt::TCrypt(std::size_t maxBufferSize) noexcept
+TCrypt::TCrypt(std::size_t maxBufferSize)
 : EncBuffer(maxBufferSize + AES_BLOCK_SIZE, 0)
 , DecBuffer(maxBufferSize + AES_BLOCK_SIZE, 0) {}
 

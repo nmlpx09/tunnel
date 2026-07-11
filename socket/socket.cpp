@@ -16,7 +16,7 @@ TSocket::~TSocket() {
     }
 }
 
-TSocket::TSocket(std::size_t maxBufferSize) noexcept
+TSocket::TSocket(std::size_t maxBufferSize)
 : MaxBufferSize(maxBufferSize)
 , Buffer(MaxBufferSize, 0) { }
 
@@ -131,9 +131,9 @@ std::tuple<
 
     ip.resize(ip.find('\0'));
 
-    auto port = htons(sockaddrRemote.sin_port);
+    auto port = ntohs(sockaddrRemote.sin_port);
 
-    return {cref(Buffer), readSize, ip, port};
+    return {cref(Buffer), readSize, std::move(ip), port};
 }
 
 }

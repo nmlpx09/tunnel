@@ -14,7 +14,7 @@ namespace NTun {
 
 struct TTun {
 public:
-    TTun(std::size_t maxBufferSize) noexcept;
+    TTun(std::size_t maxBufferSize);
     TTun(const TTun&) = delete;
     TTun(TTun&&) = delete;
     TTun& operator=(const TTun&) = delete;
