@@ -16,7 +16,7 @@ std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) n
         return EErrorCode::KeySize;
     }
 
-    if (cipher.empty() || iv.empty()) {
+    if (cipher.empty()) {
         return EErrorCode::KeySize;
     }
 

@@ -26,7 +26,7 @@ std::optional<std::pair<std::string, std::uint16_t>> TIpsStorage::Get(std::uint3
     if (it == Map.end()) {
         return {};
     }
-    return std::make_pair(it->Ip, it->Port);
+    return std::make_pair(it->second.Ip, it->second.Port);
 }
 
 }

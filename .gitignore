@@ -1,3 +1,4 @@
 *.o
+*.d
 client/tun
 server/tun
