@@ -1,6 +1,5 @@
 #pragma once
 
-#include <poll/poll.h>
 #include <types.h>
 
 #include <cstdint>
@@ -22,6 +21,7 @@ public:
     ~TTun();
 
     std::error_code Init(const std::string& deviceName) noexcept;
+    std::int32_t GetFd() const noexcept;
 
     void Write(const TBuffer& buffer, std::size_t size) const noexcept;
 
@@ -34,7 +34,6 @@ private:
     std::int32_t Fd = -1;
     std::size_t MaxBufferSize = 0;
     TBuffer Buffer;
-    friend struct NPoll::TPoll;
 };
 
 using TTunPtr = std::shared_ptr<TTun>;

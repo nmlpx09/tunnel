@@ -28,7 +28,7 @@ public:
 
     template <class TFdProviderPtr>
     std::error_code RegisterHandlerIn(TFdProviderPtr fdProvider, TTask task) noexcept {
-        const auto fd = fdProvider->Fd;
+        const auto fd = fdProvider->GetFd();
 
         auto event = epoll_event {
             .events = EPOLLIN,

@@ -51,6 +51,10 @@ std::error_code TSocket::Init(
     return {};
 }
 
+std::int32_t TSocket::GetFd() const noexcept {
+    return Fd;
+}
+
 void TSocket::Write(
     const TBuffer& buffer,
     std::size_t size,

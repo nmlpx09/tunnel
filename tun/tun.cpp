@@ -44,6 +44,10 @@ std::error_code TTun::Init(const std::string& deviceName) noexcept {
     return {};
 }
 
+std::int32_t TTun::GetFd() const noexcept {
+    return Fd;
+}
+
 void TTun::Write(const TBuffer& buffer, std::size_t size) const noexcept {
     if (Fd < 0 || size == 0) {
         return;

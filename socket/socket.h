@@ -1,6 +1,5 @@
 #pragma once
 
-#include <poll/poll.h>
 #include <types.h>
 
 #include <cstdint>
@@ -22,6 +21,7 @@ public:
     ~TSocket();
 
     std::error_code Init(const std::string& localIp, std::uint16_t localPort) noexcept;
+    std::int32_t GetFd() const noexcept;
 
     void Write(
         const TBuffer& buffer,
@@ -41,7 +41,6 @@ private:
     std::int32_t Fd = -1;
     std::size_t MaxBufferSize = 0;
     TBuffer Buffer;
-    friend struct NPoll::TPoll;
 };
 
 using TSocketPtr = std::shared_ptr<TSocket>;

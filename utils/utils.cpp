@@ -13,13 +13,14 @@ bool ValidTunFrame(const TBuffer& buffer, std::size_t size) noexcept {
         return false;
     }
 
-    std::uint32_t val;
-    std::memcpy(&val, buffer.data(), sizeof(val));
-    return val == 0x00080000;
+    return buffer[0] == 0
+        && buffer[1] == 0
+        && buffer[2] == 0x08
+        && buffer[3] == 0;
 }
 
 std::uint32_t GetSrcIpFromTunFrame(const TBuffer& buffer, std::size_t size) noexcept {
-    if (size < 24) {
+    if (size < 20) {
         return 0;
     }
 
