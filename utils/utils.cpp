@@ -3,6 +3,8 @@
 
 #include <errors.h>
 
+#include <arpa/inet.h>
+
 #include <fstream>
 #include <cstring>
 #include <limits>
@@ -96,7 +98,12 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
 
     if (isClient) {
         if (env.count("remoteIp") > 0) {
-            conf.RemoteIp = env.at("remoteIp");
+            std::uint32_t ip;
+            const auto& ipStr = env.at("remoteIp");
+            if (auto ret = inet_pton(AF_INET, ipStr.c_str(), &ip); ret == 0) {
+                return {EErrorCode::RemoteIp, {}};
+            }
+            conf.RemoteIp = ip;
         } else {
             return {EErrorCode::RemoteIp, {}};
         }

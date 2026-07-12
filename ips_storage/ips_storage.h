@@ -13,11 +13,11 @@ namespace NIpsStorage {
 
 struct TElement {
 public:
-    TElement(std::string ip, std::uint16_t port);
+    TElement(std::uint32_t ip, std::uint16_t port);
     TElement() = default;
 private:
     friend class TIpsStorage;
-    std::string Ip;
+    std::uint32_t Ip;
     std::uint16_t Port = 0;
 };
 
@@ -30,8 +30,8 @@ public:
     TIpsStorage& operator=(TIpsStorage&&) = delete;
     ~TIpsStorage() = default;
 
-    void Add(std::uint32_t key, const std::string& ip, std::uint16_t port) noexcept;
-    std::optional<std::pair<std::string, std::uint16_t>> Get(std::uint32_t key) noexcept;
+    void Add(std::uint32_t key, std::uint32_t ip, std::uint16_t port) noexcept;
+    std::optional<std::pair<std::uint32_t, std::uint16_t>> Get(std::uint32_t key) noexcept;
 
 private:
     std::unordered_map<std::uint32_t, TElement> Map;

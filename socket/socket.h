@@ -20,20 +20,20 @@ public:
     TSocket& operator=(TSocket&&) = delete;
     ~TSocket();
 
-    std::error_code Init(const std::string& localIp, std::uint16_t localPort) noexcept;
+    std::error_code Init(std::uint32_t localIp, std::uint16_t localPort) noexcept;
     std::int32_t GetFd() const noexcept;
 
     void Write(
         const TBuffer& buffer,
         std::size_t size,
-        const std::string& remoteIp,
+        std::uint32_t remoteIp,
         std::uint16_t remotePort
     ) const noexcept;
 
     std::tuple<
         std::reference_wrapper<const TBuffer>,
         std::size_t,
-        std::string,
+        std::uint32_t,
         std::uint16_t
     > Read() noexcept;
 

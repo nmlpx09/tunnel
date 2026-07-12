@@ -2,11 +2,11 @@
 
 namespace NIpsStorage {
 
-TElement::TElement(std::string ip, std::uint16_t port)
-: Ip(std::move(ip))
+TElement::TElement(std::uint32_t ip, std::uint16_t port)
+: Ip(ip)
 , Port(port) {}
 
-void TIpsStorage::Add(std::uint32_t key, const std::string& ip, std::uint16_t port) noexcept {
+void TIpsStorage::Add(std::uint32_t key, std::uint32_t ip, std::uint16_t port) noexcept {
     if (key == 0) {
         return;
     }
@@ -19,7 +19,7 @@ void TIpsStorage::Add(std::uint32_t key, const std::string& ip, std::uint16_t po
     Map[key] = TElement{ip, port};
 }
 
-std::optional<std::pair<std::string, std::uint16_t>> TIpsStorage::Get(std::uint32_t key) noexcept {
+std::optional<std::pair<std::uint32_t, std::uint16_t>> TIpsStorage::Get(std::uint32_t key) noexcept {
     std::unique_lock<std::mutex> ulock{Mutex};
     auto it = Map.find(key);
 

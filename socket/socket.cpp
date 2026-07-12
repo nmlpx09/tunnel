@@ -21,7 +21,7 @@ TSocket::TSocket(std::size_t maxBufferSize)
 , Buffer(MaxBufferSize, 0) { }
 
 std::error_code TSocket::Init(
-    const std::string& localIp,
+    std::uint32_t localIp,
     std::uint16_t localPort
 ) noexcept {
     if (Fd = socket(AF_INET, SOCK_DGRAM, 0); Fd < 0) {
@@ -32,7 +32,7 @@ std::error_code TSocket::Init(
         .sin_family = AF_INET,
         .sin_port = htons(localPort),
         .sin_addr = {
-            .s_addr = inet_addr(localIp.c_str())
+            .s_addr = localIp
         },
         .sin_zero = {0}
     };
@@ -58,7 +58,7 @@ std::int32_t TSocket::GetFd() const noexcept {
 void TSocket::Write(
     const TBuffer& buffer,
     std::size_t size,
-    const std::string& remoteIp,
+    std::uint32_t remoteIp,
     std::uint16_t remotePort
 ) const noexcept {
     if (Fd < 0 || size == 0) {
@@ -69,7 +69,7 @@ void TSocket::Write(
         .sin_family = AF_INET,
         .sin_port = htons(remotePort),
         .sin_addr = {
-            .s_addr = inet_addr(remoteIp.c_str())
+            .s_addr = remoteIp
         },
         .sin_zero = {0}
     };
@@ -98,7 +98,7 @@ void TSocket::Write(
 std::tuple<
     std::reference_wrapper<const TBuffer>,
     std::size_t,
-    std::string,
+    std::uint32_t,
     std::uint16_t
 > TSocket::Read() noexcept {
     if (Fd < 0) {
@@ -127,19 +127,7 @@ std::tuple<
         return {cref(Buffer), 0, {}, 0};
     }
 
-    std::string ip(INET_ADDRSTRLEN, '\0');
-
-    if (inet_ntop(AF_INET, &sockaddrRemote.sin_addr, const_cast<char*>(ip.c_str()), INET_ADDRSTRLEN) == nullptr) {
-        return {cref(Buffer), 0, {}, 0};
-    }
-
-    if(auto pos = ip.find('\0'); pos != ip.npos) {
-        ip.resize(pos);
-    }
-
-    auto port = ntohs(sockaddrRemote.sin_port);
-
-    return {cref(Buffer), readSize, std::move(ip), port};
+    return {cref(Buffer), readSize, sockaddrRemote.sin_addr.s_addr, ntohs(sockaddrRemote.sin_port)};
 }
 
 }
