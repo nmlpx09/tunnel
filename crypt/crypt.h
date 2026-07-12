@@ -36,12 +36,12 @@ public:
 
 private:
     using TCipherCtxPtr = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
-    using TEncodeCtxPtr = std::unique_ptr<EVP_ENCODE_CTX, decltype(&EVP_ENCODE_CTX_free)>;
+    using TDecodeCtxPtr = std::unique_ptr<EVP_ENCODE_CTX, decltype(&EVP_ENCODE_CTX_free)>;
 
     TCipherCtxPtr EncCtx = TCipherCtxPtr{EVP_CIPHER_CTX_new(), &EVP_CIPHER_CTX_free};
     TCipherCtxPtr DecCtx = TCipherCtxPtr{EVP_CIPHER_CTX_new(), &EVP_CIPHER_CTX_free};
 
-    TEncodeCtxPtr EncodeCtx = TEncodeCtxPtr{EVP_ENCODE_CTX_new(), &EVP_ENCODE_CTX_free};
+    TDecodeCtxPtr DecodeCtx = TDecodeCtxPtr{EVP_ENCODE_CTX_new(), &EVP_ENCODE_CTX_free};
 
     TBuffer EncBuffer;
     TBuffer DecBuffer;

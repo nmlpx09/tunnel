@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include <cstring>
+#include <limits>
 
 namespace NUtils {
 
@@ -102,7 +103,11 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
 
         if (env.count("remotePort") > 0) {
             try {
-                conf.RemotePort = std::stoi(env.at("remotePort"));
+                if (const auto port = std::stoul(env.at("remotePort")); port > std::numeric_limits<std::uint16_t>::max()) {
+                     return {EErrorCode::RemotePortConvert, {}};
+                } else {
+                     conf.RemotePort = port;
+                }
             } catch (const std::exception&) {
                 return {EErrorCode::RemotePortConvert, {}};
             }
@@ -112,7 +117,11 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
     } else {
         if (env.count("localPort") > 0) {
             try {
-                conf.LocalPort = std::stoi(env.at("localPort"));
+                if (const auto port = std::stoul(env.at("localPort")); port > std::numeric_limits<std::uint16_t>::max()) {
+                     return {EErrorCode::LocalPortConvert, {}};
+                } else {
+                     conf.LocalPort = port;
+                }
             } catch (const std::exception&) {
                 return {EErrorCode::LocalPortConvert, {}};
             }

@@ -12,32 +12,74 @@ TCrypt::TCrypt(std::size_t maxBufferSize)
 , DecBuffer(maxBufferSize + AES_BLOCK_SIZE, 0) {}
 
 std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) noexcept {
-    if (!EncodeCtx) {
-        return EErrorCode::InitEncrypt;
+    if (!DecodeCtx) {
+        return EErrorCode::KeySize;
     }
 
     if (cipher.empty() || iv.empty()) {
         return EErrorCode::KeySize;
     }
 
+    if (iv.empty()) {
+        return EErrorCode::IvSize;
+    }
+
     TBuffer decodeCipher(cipher.size(), 0);
     std::int32_t decodeCipherSize;
     std::int32_t decodeCipherSizeFinal;
 
-    EVP_DecodeInit(EncodeCtx.get());
-    EVP_DecodeUpdate(EncodeCtx.get(), decodeCipher.data(), &decodeCipherSize, reinterpret_cast<const unsigned char*>(cipher.c_str()), cipher.size());
-    EVP_DecodeFinal(EncodeCtx.get(), decodeCipher.data() + decodeCipherSize, &decodeCipherSizeFinal);
+    EVP_DecodeInit(DecodeCtx.get());
+    if(
+        auto ret = EVP_DecodeUpdate(
+            DecodeCtx.get(),
+            decodeCipher.data(),
+            &decodeCipherSize,
+            reinterpret_cast<const unsigned char*>(cipher.c_str()),
+            cipher.size()
+        );
+        ret == -1
+    ) {
+        return EErrorCode::InitKey;
+    }
+
+    if(
+        auto ret = EVP_DecodeFinal(DecodeCtx.get(), decodeCipher.data() + decodeCipherSize, &decodeCipherSizeFinal);
+        ret == -1
+    ) {
+        return EErrorCode::InitKey;
+    }
+
+    if (decodeCipherSize + decodeCipherSizeFinal != 16) {
+        return EErrorCode::KeySize;
+    }
 
     TBuffer decodeIv(iv.size(), 0);
     std::int32_t decodeIvSize;
     std::int32_t decodeIvSizeFinal;
 
-    EVP_DecodeInit(EncodeCtx.get());
-    EVP_DecodeUpdate(EncodeCtx.get(), decodeIv.data(), &decodeIvSize, reinterpret_cast<const unsigned char*>(iv.c_str()), iv.size());
-    EVP_DecodeFinal(EncodeCtx.get(), decodeIv.data() + decodeIvSize, &decodeIvSizeFinal);
+    EVP_DecodeInit(DecodeCtx.get());
+    if(
+        auto ret = EVP_DecodeUpdate(
+            DecodeCtx.get(),
+            decodeIv.data(),
+            &decodeIvSize,
+            reinterpret_cast<const unsigned char*>(iv.c_str()),
+            iv.size()
+        );
+        ret == -1
+    ) {
+        return EErrorCode::InitIv;
+    }
 
-    if (decodeIvSize + decodeIvSizeFinal != 16 || decodeCipherSize + decodeCipherSizeFinal != 16) {
-        return EErrorCode::KeySize;
+    if(
+        auto ret = EVP_DecodeFinal(DecodeCtx.get(), decodeIv.data() + decodeIvSize, &decodeIvSizeFinal);
+        ret == -1
+    ) {
+        return EErrorCode::InitIv;
+    }
+
+    if (decodeIvSize + decodeIvSizeFinal != 16) {
+        return EErrorCode::IvSize;
     }
 
     if (auto ret = EVP_EncryptInit_ex(EncCtx.get(), EVP_aes_128_cbc(), nullptr, decodeCipher.data(), decodeIv.data()); ret == 0) {

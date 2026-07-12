@@ -33,8 +33,8 @@ case $1 in
     "c")
         test_sudo
 
-        test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE exits" && exit 1
-        ! test_interface $LOCAL_DEVICE && echo "interface $LOCAL_DEVICE not exits" && exit 1
+        test_interface $TUN_DEVICE && echo "interface $TUN_DEVICE exists" && exit 1
+        ! test_interface $LOCAL_DEVICE && echo "interface $LOCAL_DEVICE not exists" && exit 1
 
         ip tuntap add mode tun $TUN_DEVICE
         ip address add $TUN_IP/24 dev $TUN_DEVICE

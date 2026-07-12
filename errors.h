@@ -5,6 +5,9 @@
 enum EErrorCode {
     Ok,
     KeySize,
+    IvSize,
+    InitKey,
+    InitIv,
     InitEncrypt,
     InitDecrypt,
     EpollAdd,
@@ -46,6 +49,12 @@ public:
                 return "ok";
             case KeySize:
                 return "key size error";
+            case IvSize:
+                return "iv size error";
+            case InitKey:
+                return "init key error";
+            case InitIv:
+                return "init iv error";
             case InitEncrypt:
                 return "init encrypt error";
             case InitDecrypt:
