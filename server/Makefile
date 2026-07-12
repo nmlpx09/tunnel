@@ -23,4 +23,4 @@ install:
 
 uninstall:
 	rm /usr/bin/$(RUN)0
-	rm /usr/bin/$(RUN).sh
+	rm /usr/bin/$(RUN)

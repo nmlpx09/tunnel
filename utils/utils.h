@@ -11,11 +11,11 @@
 
 namespace NUtils {
 
-bool ValidIpDatagram(const TBuffer& buffer, std::size_t size) noexcept;
+bool ValidTunFrame(const TBuffer& buffer, std::size_t size) noexcept;
 
-std::uint32_t GetSrcIp(const TBuffer& buffer) noexcept;
+std::uint32_t GetSrcIpFromTunFrame(const TBuffer& buffer, std::size_t size) noexcept;
 
-std::uint32_t GetDstIp(const TBuffer& buffer) noexcept;
+std::uint32_t GetDstIpFromTunFrame(const TBuffer& buffer, std::size_t size) noexcept;
 
 std::unordered_map<std::string, std::string> GetEnv() noexcept;
 

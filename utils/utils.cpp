@@ -8,7 +8,7 @@
 
 namespace NUtils {
 
-bool ValidIpDatagram(const TBuffer& buffer, std::size_t size) noexcept {
+bool ValidTunFrame(const TBuffer& buffer, std::size_t size) noexcept {
     if (size < 24) {
         return false;
     }
@@ -18,13 +18,21 @@ bool ValidIpDatagram(const TBuffer& buffer, std::size_t size) noexcept {
     return val == 0x00080000;
 }
 
-std::uint32_t GetSrcIp(const TBuffer& buffer) noexcept {
+std::uint32_t GetSrcIpFromTunFrame(const TBuffer& buffer, std::size_t size) noexcept {
+    if (size < 24) {
+        return 0;
+    }
+
     std::uint32_t val;
     std::memcpy(&val, buffer.data() + 16, sizeof(val));
     return val;
 }
 
-std::uint32_t GetDstIp(const TBuffer& buffer) noexcept {
+std::uint32_t GetDstIpFromTunFrame(const TBuffer& buffer, std::size_t size) noexcept {
+    if (size < 24) {
+        return 0;
+    }
+
     std::uint32_t val;
     std::memcpy(&val, buffer.data() + 20, sizeof(val));
     return val;
@@ -66,13 +74,14 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
     if (env.count("tunMtu") > 0) {
         std::size_t tunMtu = 0;
         try {
-            tunMtu = std::stoi(env.at("tunMtu"));
+            tunMtu = std::stoull(env.at("tunMtu"));
         } catch (const std::exception&) {
             return {EErrorCode::TunMtuConvert, {}};
         }
-        if (tunMtu > MAX_TUN_MTU_SIZE) {
+        if (tunMtu > MAX_TUN_MTU_SIZE || tunMtu == 0) {
             return {EErrorCode::TunMtuMaxSize, {}};
         }
+        conf.TunMtu = tunMtu;
     } else {
         return {EErrorCode::TunMtu, {}};
     }

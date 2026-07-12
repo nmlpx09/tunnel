@@ -7,6 +7,9 @@ TElement::TElement(std::string ip, std::uint16_t port)
 , Port(port) {}
 
 void TIpsStorage::Add(std::uint32_t key, const std::string& ip, std::uint16_t port) noexcept {
+    if (key == 0) {
+        return;
+    }
     std::unique_lock<std::mutex> ulock{Mutex};
     auto now = std::chrono::steady_clock::now();
     if (now - LiveTime > std::chrono::seconds(3600)) {

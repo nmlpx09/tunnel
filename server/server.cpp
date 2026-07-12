@@ -23,10 +23,10 @@ void tx(
         const auto& [buffer, size] = tun->Read();
         if (size == 0) {
             continue;
-        } else if (!NUtils::ValidIpDatagram(buffer, size)) {
+        } else if (!NUtils::ValidTunFrame(buffer, size)) {
             continue;
         }
-        if (const auto value = ipsStorage->Get(NUtils::GetDstIp(buffer)); value) {
+        if (const auto value = ipsStorage->Get(NUtils::GetDstIpFromTunFrame(buffer, size)); value) {
             const auto& [encrBuffer, encrSize] = crypt->Encrypt(buffer, size);
             socket->Write(encrBuffer, encrSize, value->first, value->second);
         }
@@ -47,11 +47,11 @@ void rx(
             continue;
         }
         const auto& [decrBuffer, decrSize] = crypt->Decrypt(buffer, size);
-        if (!NUtils::ValidIpDatagram(decrBuffer, decrSize)) {
+        if (!NUtils::ValidTunFrame(decrBuffer, decrSize)) {
             continue;
         }
 
-        ipsStorage->Add(NUtils::GetSrcIp(decrBuffer), ip, port);
+        ipsStorage->Add(NUtils::GetSrcIpFromTunFrame(decrBuffer, decrSize), ip, port);
 
         tun->Write(decrBuffer, decrSize);
     }
@@ -123,9 +123,6 @@ int main() {
         while (true) {
             poll->RunOne();
         }
-
-        tTx.join();
-        tRx.join();
     } catch (const std::exception& exc) {
         std::cerr << exc.what() << std::endl;
         return 9;

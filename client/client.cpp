@@ -22,7 +22,7 @@ void tx(
         const auto& [buffer, size] = tun->Read();
         if (size == 0) {
             continue;
-        } else if (!NUtils::ValidIpDatagram(buffer, size)) {
+        } else if (!NUtils::ValidTunFrame(buffer, size)) {
             continue;
         }
         const auto& [encrBuffer, encrSize] = crypt->Encrypt(buffer, size);
@@ -46,7 +46,7 @@ void rx(
             continue;
         }
         const auto& [decrBuffer, decrSize] = crypt->Decrypt(buffer, size);
-        if (!NUtils::ValidIpDatagram(decrBuffer, decrSize)) {
+        if (!NUtils::ValidTunFrame(decrBuffer, decrSize)) {
             continue;
         }
         tun->Write(decrBuffer, decrSize);
@@ -117,9 +117,6 @@ int main() {
         while (true) {
             poll->RunOne();
         }
-
-        tTx.join();
-        tRx.join();
     } catch(const std::exception& exc) {
         std::cerr << exc.what() << std::endl;
         return 9;
