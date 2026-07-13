@@ -5,17 +5,14 @@
 #include <sys/epoll.h>
 
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <system_error>
 #include <vector>
-#include <unordered_map>
+#include <unordered_set>
 
 namespace NPoll {
 
 struct TPoll {
-private:
-    using TTask = std::function<void()>;
 public:
     TPoll(std::size_t maxPollEvents, std::int32_t maxPollTimeOut);
     TPoll(const TPoll&) = delete;
@@ -27,7 +24,7 @@ public:
     std::error_code Init() noexcept;
 
     template <class TFdProviderPtr>
-    std::error_code RegisterHandlerIn(TFdProviderPtr fdProvider, TTask task) noexcept {
+    std::error_code RegisterFd(TFdProviderPtr fdProvider) noexcept {
         const auto fd = fdProvider->GetFd();
 
         auto event = epoll_event {
@@ -40,19 +37,19 @@ public:
             return EErrorCode::EpollAdd;
         }
 
-        Handlers[fd] = std::move(task);
+        Handlers.insert(fd);
 
         return {};
     }
 
-    void RunOne() noexcept;
+    bool RunOne() noexcept;
 
 private:
     std::int32_t Fd = -1;
     std::size_t MaxPollEvents = 0;
     std::int32_t MaxPollTimeOut = -1;
     std::vector<epoll_event> Events;
-    std::unordered_map<std::int32_t, TTask> Handlers;
+    std::unordered_set<std::int32_t> Handlers;
 };
 
 using TPollPtr = std::shared_ptr<TPoll>;

@@ -28,9 +28,9 @@ std::error_code TPoll::Init() noexcept {
     return {};
 }
 
-void TPoll::RunOne() noexcept {
+bool TPoll::RunOne() noexcept {
     if (Fd < 0) {
-        return;
+        return false;
     }
     const auto numberFd = epoll_wait(Fd, Events.data(), MaxPollEvents, MaxPollTimeOut);
 
@@ -39,9 +39,11 @@ void TPoll::RunOne() noexcept {
         const auto events = Events[index].events;
 
         if (Handlers.contains(fd) && (events & EPOLLIN) == events) {
-            std::invoke(Handlers[fd]);
+            return true;
         }
     }
+
+    return false;
 }
 
 }

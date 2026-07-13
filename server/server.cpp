@@ -1,5 +1,4 @@
 #include <configs.h>
-#include <context/context.h>
 #include <crypt/crypt.h>
 #include <ips_storage/ips_storage.h>
 #include <socket/socket.h>
@@ -12,14 +11,16 @@
 #include <thread>
 
 void tx(
-    NContext::TContextPtr ctx,
+    NPoll::TPollPtr poll,
     NTun::TTunPtr tun,
     NSocket::TSocketPtr socket,
     NCrypt::TCryptPtr crypt,
     NIpsStorage::TIpsStoragePtr ipsStorage
 ) noexcept {
     while(true) {
-        ctx->TunWait();
+        if (!poll->RunOne()) {
+            continue;
+        }
         const auto& [buffer, size] = tun->Read();
         if (size == 0) {
             continue;
@@ -34,14 +35,16 @@ void tx(
 }
 
 void rx(
-    NContext::TContextPtr ctx,
+    NPoll::TPollPtr poll,
     NTun::TTunPtr tun,
     NSocket::TSocketPtr socket,
     NCrypt::TCryptPtr crypt,
     NIpsStorage::TIpsStoragePtr ipsStorage
 ) noexcept {
     while(true) {
-        ctx->SocketWait();
+        if (!poll->RunOne()) {
+            continue;
+        }
         const auto& [buffer, size, ip, port] = socket->Read();
         if (size == 0) {
             continue;
@@ -66,8 +69,6 @@ int main() {
              return 1;
         }
 
-        auto ctx = std::make_shared<NContext::TContext>();
-
         auto tun = std::make_shared<NTun::TTun>(MAX_DATA_SIZE);
 
         if (auto ec = tun->Init(conf.TunDevice); ec) {
@@ -82,21 +83,28 @@ int main() {
             return 3;
         }
 
-        auto poll = std::make_shared<NPoll::TPoll>(MAX_POLL_EVENTS, MAX_POLL_TIMEOUT_MS);
+        auto pollTun = std::make_shared<NPoll::TPoll>(MAX_POLL_EVENTS, MAX_POLL_TIMEOUT_MS);
 
-        if (auto ec = poll->Init(); ec) {
+        if (auto ec = pollTun->Init(); ec) {
             std::cerr << ec.message() << std::endl;
             return 4;
         }
 
-        if (auto ec = poll->RegisterHandlerIn(tun, [ctx] { ctx->TunNotify(); }); ec) {
+        if (auto ec = pollTun->RegisterFd(tun); ec) {
             std::cerr << ec.message() << std::endl;
             return 5;
         }
 
-        if (auto ec = poll->RegisterHandlerIn(socket, [ctx] { ctx->SocketNotify(); }); ec) {
+        auto pollSocket = std::make_shared<NPoll::TPoll>(MAX_POLL_EVENTS, MAX_POLL_TIMEOUT_MS);
+
+        if (auto ec = pollSocket->Init(); ec) {
             std::cerr << ec.message() << std::endl;
             return 6;
+        }
+
+        if (auto ec = pollSocket->RegisterFd(socket); ec) {
+            std::cerr << ec.message() << std::endl;
+            return 7;
         }
 
         auto ipsStorage = std::make_shared<NIpsStorage::TIpsStorage>();
@@ -107,24 +115,23 @@ int main() {
 
         if (!keyPair) {
             std::cerr << "failed load key pair" << std::endl;
-            return 7;
+            return 8;
         }
 
         if (auto ec = crypt->Init(keyPair->first, keyPair->second); ec) {
             std::cerr << ec.message() << std::endl;
-            return 8;
+            return 9;
         }
 
-        std::thread tTx(tx, ctx, tun, socket, crypt, ipsStorage);
-        std::thread tRx(rx, ctx, tun, socket, crypt, ipsStorage);
+        std::thread tTx(tx, pollTun, tun, socket, crypt, ipsStorage);
+        std::thread tRx(rx, pollSocket, tun, socket, crypt, ipsStorage);
 
         std::cerr << "run server" << std::endl;
 
-        while (true) {
-            poll->RunOne();
-        }
+        tTx.join();
+        tRx.join();
     } catch (const std::exception& exc) {
         std::cerr << exc.what() << std::endl;
-        return 9;
+        return 10;
     }
 }

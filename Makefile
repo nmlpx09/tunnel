@@ -9,7 +9,6 @@ TARGET_CLIENT := client/tun
 TARGET_SERVER := server/tun
 
 COMMON_OBJ := \
-	context/context.o \
 	crypt/crypt.o \
 	poll/poll.o \
 	socket/socket.o \

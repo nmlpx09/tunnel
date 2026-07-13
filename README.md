@@ -101,7 +101,6 @@ sudo tun d
 .
 ├── client/        # Client entry point and shell scripts
 ├── server/        # Server entry point and shell scripts
-├── context/       # Condition variable synchronization
 ├── crypt/         # AES-128-CBC encryption/decryption (OpenSSL EVP)
 ├── ips_storage/   # Client IP tracking (server side)
 ├── poll/          # epoll-based I/O multiplexing
