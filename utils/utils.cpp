@@ -42,43 +42,19 @@ std::uint32_t GetDstIpFromTunFrame(const TBuffer& buffer, std::size_t size) noex
     return val;
 }
 
-std::unordered_map<std::string, std::string> GetEnv() noexcept {
-    std::unordered_map<std::string, std::string> result;
-    if (std::getenv("TUN_DEVICE") != nullptr) {
-        result.insert({"tunDevice", std::getenv("TUN_DEVICE")});
-    }
-    if (std::getenv("REMOTE_IP") != nullptr) {
-        result.insert({"remoteIp", std::getenv("REMOTE_IP")});
-    }
-    if (std::getenv("REMOTE_PORT") != nullptr) {
-        result.insert({"remotePort", std::getenv("REMOTE_PORT")});
-    }
-    if (std::getenv("LOCAL_PORT") != nullptr) {
-        result.insert({"localPort", std::getenv("LOCAL_PORT")});
-    }
-    if (std::getenv("TUN_MTU") != nullptr) {
-        result.insert({"tunMtu", std::getenv("TUN_MTU")});
-    }
-    if (std::getenv("KEYS_FILE") != nullptr) {
-        result.insert({"keysFile", std::getenv("KEYS_FILE")});
-    }
-    return result;
-}
-
 std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
-    const auto env = GetEnv();
     TConf conf;
 
-    if (env.count("tunDevice") > 0) {
-        conf.TunDevice = env.at("tunDevice");
+    if (std::getenv("TUN_DEVICE") != nullptr) {
+        conf.TunDevice = std::getenv("TUN_DEVICE");
     } else {
         return {EErrorCode::TunDevice, {}};
     }
 
-    if (env.count("tunMtu") > 0) {
+    if (std::getenv("TUN_MTU") != nullptr) {
         std::size_t tunMtu = 0;
         try {
-            tunMtu = std::stoull(env.at("tunMtu"));
+            tunMtu = std::stoull(std::getenv("TUN_MTU"));
         } catch (const std::exception&) {
             return {EErrorCode::TunMtuConvert, {}};
         }
@@ -90,17 +66,16 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
         return {EErrorCode::TunMtu, {}};
     }
 
-    if (env.count("keysFile") > 0) {
-        conf.KeysFile = env.at("keysFile");
+    if (std::getenv("KEYS_FILE") != nullptr) {
+        conf.KeysFile = std::getenv("KEYS_FILE");
     } else {
         return {EErrorCode::KeysFile, {}};
     }
 
     if (isClient) {
-        if (env.count("remoteIp") > 0) {
+        if (std::getenv("REMOTE_IP") != nullptr) {
             std::uint32_t ip;
-            const auto& ipStr = env.at("remoteIp");
-            if (auto ret = inet_pton(AF_INET, ipStr.c_str(), &ip); ret == 0) {
+            if (auto ret = inet_pton(AF_INET, std::getenv("REMOTE_IP"), &ip); ret == 0) {
                 return {EErrorCode::RemoteIp, {}};
             }
             conf.RemoteIp = ip;
@@ -108,9 +83,9 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
             return {EErrorCode::RemoteIp, {}};
         }
 
-        if (env.count("remotePort") > 0) {
+        if (std::getenv("REMOTE_PORT") != nullptr) {
             try {
-                if (const auto port = std::stoul(env.at("remotePort")); port > std::numeric_limits<std::uint16_t>::max()) {
+                if (const auto port = std::stoul(std::getenv("REMOTE_PORT")); port > std::numeric_limits<std::uint16_t>::max()) {
                      return {EErrorCode::RemotePortConvert, {}};
                 } else {
                      conf.RemotePort = port;
@@ -122,9 +97,9 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
             return {EErrorCode::RemotePort, {}};
         }
     } else {
-        if (env.count("localPort") > 0) {
+        if (std::getenv("LOCAL_PORT") != nullptr) {
             try {
-                if (const auto port = std::stoul(env.at("localPort")); port > std::numeric_limits<std::uint16_t>::max()) {
+                if (const auto port = std::stoul(std::getenv("LOCAL_PORT")); port > std::numeric_limits<std::uint16_t>::max()) {
                      return {EErrorCode::LocalPortConvert, {}};
                 } else {
                      conf.LocalPort = port;
