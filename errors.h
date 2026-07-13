@@ -84,7 +84,7 @@ public:
             case TunMtuConvert:
                 return "convert TUN_MTU from string";
             case TunMtuMaxSize:
-                return "tun mtu must less then MAX_TUN_MTU_SIZE";
+                return "tun mtu must be less than MAX_TUN_MTU_SIZE";
             case KeysFile:
                 return "export KEYS_FILE env";
             case RemoteIp:

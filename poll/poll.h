@@ -14,7 +14,7 @@ namespace NPoll {
 
 struct TPoll {
 public:
-    TPoll(std::size_t maxPollEvents, std::int32_t maxPollTimeOut);
+    TPoll(std::int32_t maxPollTimeOut);
     TPoll(const TPoll&) = delete;
     TPoll(TPoll&&) = delete;
     TPoll& operator=(const TPoll&) = delete;
@@ -46,7 +46,7 @@ public:
 
 private:
     std::int32_t Fd = -1;
-    std::size_t MaxPollEvents = 0;
+    std::size_t MaxPollEvents = 1;
     std::int32_t MaxPollTimeOut = -1;
     std::vector<epoll_event> Events;
     std::unordered_set<std::int32_t> Handlers;

@@ -83,7 +83,7 @@ int main() {
             return 3;
         }
 
-        auto pollTun = std::make_shared<NPoll::TPoll>(MAX_POLL_EVENTS, MAX_POLL_TIMEOUT_MS);
+        auto pollTun = std::make_shared<NPoll::TPoll>(MAX_POLL_TIMEOUT_MS);
 
         if (auto ec = pollTun->Init(); ec) {
             std::cerr << ec.message() << std::endl;
@@ -95,7 +95,7 @@ int main() {
             return 5;
         }
 
-        auto pollSocket = std::make_shared<NPoll::TPoll>(MAX_POLL_EVENTS, MAX_POLL_TIMEOUT_MS);
+        auto pollSocket = std::make_shared<NPoll::TPoll>(MAX_POLL_TIMEOUT_MS);
 
         if (auto ec = pollSocket->Init(); ec) {
             std::cerr << ec.message() << std::endl;

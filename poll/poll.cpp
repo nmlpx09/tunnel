@@ -11,9 +11,8 @@ TPoll::~TPoll() {
     }
 }
 
-TPoll::TPoll(std::size_t maxPollEvents, std::int32_t maxPollTimeOut)
-: MaxPollEvents(maxPollEvents)
-, MaxPollTimeOut(maxPollTimeOut) { }
+TPoll::TPoll(std::int32_t maxPollTimeOut)
+: MaxPollTimeOut(maxPollTimeOut) { }
 
 std::error_code TPoll::Init() noexcept {
     if (MaxPollEvents == 0) {
