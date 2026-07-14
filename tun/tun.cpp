@@ -38,9 +38,14 @@ std::error_code TTun::Init(const std::string& deviceName) noexcept {
         return EErrorCode::TunBind;
     }
 
-    if (auto ret = fcntl(Fd, F_SETFL, O_NONBLOCK); ret < 0) {
+    if (auto flags = fcntl(Fd, F_GETFL, 0); flags < 0) {
         return EErrorCode::TunConfig;
+    } else {
+        if (auto ret = fcntl(Fd, F_SETFL, flags | O_NONBLOCK); ret < 0) {
+            return EErrorCode::TunConfig;
+        }
     }
+
     return {};
 }
 

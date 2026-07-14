@@ -45,16 +45,16 @@ std::uint32_t GetDstIpFromTunFrame(const TBuffer& buffer, std::size_t size) noex
 std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
     TConf conf;
 
-    if (std::getenv("TUN_DEVICE") != nullptr) {
-        conf.TunDevice = std::getenv("TUN_DEVICE");
+    if (auto* value = std::getenv("TUN_DEVICE"); value != nullptr) {
+        conf.TunDevice = value;
     } else {
         return {EErrorCode::TunDevice, {}};
     }
 
-    if (std::getenv("TUN_MTU") != nullptr) {
+    if (auto* value = std::getenv("TUN_MTU"); value != nullptr) {
         std::size_t tunMtu = 0;
         try {
-            tunMtu = std::stoull(std::getenv("TUN_MTU"));
+            tunMtu = std::stoull(value);
         } catch (const std::exception&) {
             return {EErrorCode::TunMtuConvert, {}};
         }
@@ -66,16 +66,16 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
         return {EErrorCode::TunMtu, {}};
     }
 
-    if (std::getenv("KEYS_FILE") != nullptr) {
-        conf.KeysFile = std::getenv("KEYS_FILE");
+    if (auto* value = std::getenv("KEYS_FILE"); value != nullptr) {
+        conf.KeysFile = value;
     } else {
         return {EErrorCode::KeysFile, {}};
     }
 
     if (isClient) {
-        if (std::getenv("REMOTE_IP") != nullptr) {
+        if (auto* value = std::getenv("REMOTE_IP"); value != nullptr) {
             std::uint32_t ip;
-            if (auto ret = inet_pton(AF_INET, std::getenv("REMOTE_IP"), &ip); ret == 0) {
+            if (auto ret = inet_pton(AF_INET, value, &ip); ret == 0) {
                 return {EErrorCode::RemoteIp, {}};
             }
             conf.RemoteIp = ip;
@@ -83,9 +83,9 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
             return {EErrorCode::RemoteIp, {}};
         }
 
-        if (std::getenv("REMOTE_PORT") != nullptr) {
+        if (auto* value = std::getenv("REMOTE_PORT"); value != nullptr) {
             try {
-                if (const auto port = std::stoul(std::getenv("REMOTE_PORT")); port > std::numeric_limits<std::uint16_t>::max()) {
+                if (const auto port = std::stoul(value); port > std::numeric_limits<std::uint16_t>::max()) {
                      return {EErrorCode::RemotePortConvert, {}};
                 } else {
                      conf.RemotePort = port;
@@ -97,9 +97,9 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
             return {EErrorCode::RemotePort, {}};
         }
     } else {
-        if (std::getenv("LOCAL_PORT") != nullptr) {
+        if (auto* value = std::getenv("LOCAL_PORT"); value != nullptr) {
             try {
-                if (const auto port = std::stoul(std::getenv("LOCAL_PORT")); port > std::numeric_limits<std::uint16_t>::max()) {
+                if (const auto port = std::stoul(value); port > std::numeric_limits<std::uint16_t>::max()) {
                      return {EErrorCode::LocalPortConvert, {}};
                 } else {
                      conf.LocalPort = port;

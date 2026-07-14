@@ -44,8 +44,12 @@ std::error_code TSocket::Init(
         return EErrorCode::SocketBind;
     }
 
-    if (auto ret = fcntl(Fd, F_SETFL, O_NONBLOCK); ret < 0) {
+    if (auto flags = fcntl(Fd, F_GETFL, 0); flags < 0) {
         return EErrorCode::SocketConfig;
+    } else {
+        if (auto ret = fcntl(Fd, F_SETFL, flags | O_NONBLOCK); ret < 0) {
+            return EErrorCode::SocketConfig;
+        }
     }
 
     return {};
