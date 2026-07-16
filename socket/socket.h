@@ -13,7 +13,7 @@ namespace NSocket {
 
 struct TSocket {
 public:
-    TSocket(std::size_t maxBufferSize);
+    TSocket(std::size_t maxBytesSize);
     TSocket(const TSocket&) = delete;
     TSocket(TSocket&&) = delete;
     TSocket& operator=(const TSocket&) = delete;
@@ -24,23 +24,21 @@ public:
     std::int32_t GetFd() const noexcept;
 
     void Write(
-        const TBuffer& buffer,
-        std::size_t size,
+        TBuffer,
         std::uint32_t remoteIp,
         std::uint16_t remotePort
     ) const noexcept;
 
     std::tuple<
-        std::reference_wrapper<const TBuffer>,
-        std::size_t,
+        TBuffer,
         std::uint32_t,
         std::uint16_t
     > Read() noexcept;
 
 private:
     std::int32_t Fd = -1;
-    std::size_t MaxBufferSize = 0;
-    TBuffer Buffer;
+    std::size_t MaxBytesSize = 0;
+    TBytes Bytes;
 };
 
 using TSocketPtr = std::shared_ptr<TSocket>;

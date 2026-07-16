@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include <cstring>
+#include <utility>
 
 namespace NTun {
 
@@ -19,9 +20,9 @@ TTun::~TTun() {
     }
 }
 
-TTun::TTun(std::size_t maxBufferSize)
-: MaxBufferSize(maxBufferSize)
-, Buffer(MaxBufferSize, 0) { }
+TTun::TTun(std::size_t maxBytesSize)
+: MaxBytesSize(maxBytesSize)
+, Bytes(MaxBytesSize, 0) { }
 
 std::error_code TTun::Init(const std::string& deviceName) noexcept {
     if (Fd = open("/dev/net/tun", O_RDWR); Fd < 0) {
@@ -53,33 +54,30 @@ std::int32_t TTun::GetFd() const noexcept {
     return Fd;
 }
 
-void TTun::Write(const TBuffer& buffer, std::size_t size) const noexcept {
-    if (Fd < 0 || size == 0) {
+void TTun::Write(TBuffer buffer) const noexcept {
+    if (Fd < 0 || buffer.size() == 0) {
         return;
     }
 
-    const auto writeSize = write(Fd, buffer.data(), size);
+    const auto writeSize = write(Fd, buffer.data(), buffer.size());
 
     if (writeSize < 0) {
         return;
     }
 }
 
-std::tuple<
-    std::reference_wrapper<const TBuffer>,
-    std::size_t
-> TTun::Read() noexcept {
+TBuffer TTun::Read() noexcept {
     if (Fd < 0) {
-        return {cref(Buffer), 0};
+        return {};
     }
 
-    const auto readSize = read(Fd, Buffer.data(), MaxBufferSize);
+    const auto readSize = read(Fd, Bytes.data(), MaxBytesSize);
 
-    if (readSize <= 0) {
-        return {cref(Buffer), 0};
+    if (!std::in_range<std::size_t>(readSize)) {
+        return {};
     }
 
-    return {cref(Buffer), readSize};
+    return {Bytes.begin(), static_cast<std::size_t>(readSize)};
 }
 
 }

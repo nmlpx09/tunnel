@@ -3,8 +3,10 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <span>
 
-using TBuffer = std::vector<std::uint8_t>;
+using TBytes = std::vector<std::uint8_t>;
+using TBuffer = std::span<const std::uint8_t>;
 
 struct TConf {
     std::string TunDevice;

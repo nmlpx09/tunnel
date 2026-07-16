@@ -21,15 +21,15 @@ void tx(
         if (!poll->RunOne()) {
             continue;
         }
-        const auto& [buffer, size] = tun->Read();
-        if (size == 0) {
+        const auto buffer = tun->Read();
+        if (buffer.size() == 0) {
             continue;
-        } else if (!NUtils::ValidTunFrame(buffer, size)) {
+        } else if (!NUtils::ValidTunFrame(buffer)) {
             continue;
         }
-        if (const auto value = ipsStorage->Get(NUtils::GetDstIpFromTunFrame(buffer, size)); value) {
-            const auto& [encrBuffer, encrSize] = crypt->Encrypt(buffer, size);
-            socket->Write(encrBuffer, encrSize, value->first, value->second);
+        if (const auto value = ipsStorage->Get(NUtils::GetDstIpFromTunFrame(buffer)); value) {
+            const auto encrBuffer = crypt->Encrypt(buffer);
+            socket->Write(encrBuffer, value->first, value->second);
         }
     }
 }
@@ -45,18 +45,18 @@ void rx(
         if (!poll->RunOne()) {
             continue;
         }
-        const auto& [buffer, size, ip, port] = socket->Read();
-        if (size == 0) {
+        const auto [buffer, ip, port] = socket->Read();
+        if (buffer.size() == 0) {
             continue;
         }
-        const auto& [decrBuffer, decrSize] = crypt->Decrypt(buffer, size);
-        if (!NUtils::ValidTunFrame(decrBuffer, decrSize)) {
+        const auto decrBuffer = crypt->Decrypt(buffer);
+        if (!NUtils::ValidTunFrame(decrBuffer)) {
             continue;
         }
 
-        ipsStorage->Add(NUtils::GetSrcIpFromTunFrame(decrBuffer, decrSize), ip, port);
+        ipsStorage->Add(NUtils::GetSrcIpFromTunFrame(decrBuffer), ip, port);
 
-        tun->Write(decrBuffer, decrSize);
+        tun->Write(decrBuffer);
     }
 }
 

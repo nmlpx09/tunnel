@@ -20,14 +20,14 @@ void tx(
         if (!poll->RunOne()) {
             continue;
         }
-        const auto& [buffer, size] = tun->Read();
-        if (size == 0) {
+        const auto buffer = tun->Read();
+        if (buffer.size() == 0) {
             continue;
-        } else if (!NUtils::ValidTunFrame(buffer, size)) {
+        } else if (!NUtils::ValidTunFrame(buffer)) {
             continue;
         }
-        const auto& [encrBuffer, encrSize] = crypt->Encrypt(buffer, size);
-        socket->Write(encrBuffer, encrSize, conf.RemoteIp, conf.RemotePort);
+        const auto encrBuffer = crypt->Encrypt(buffer);
+        socket->Write(encrBuffer, conf.RemoteIp, conf.RemotePort);
     }
 }
 
@@ -42,17 +42,17 @@ void rx(
         if (!poll->RunOne()) {
             continue;
         }
-        const auto& [buffer, size, ip, port] = socket->Read();
-        if (size == 0) {
+        const auto [buffer, ip, port] = socket->Read();
+        if (buffer.size() == 0) {
             continue;
-        } else if (conf.RemoteIp != ip || port != conf.RemotePort) {
-            continue;
-        }
-        const auto& [decrBuffer, decrSize] = crypt->Decrypt(buffer, size);
-        if (!NUtils::ValidTunFrame(decrBuffer, decrSize)) {
+        } else if (conf.RemoteIp != ip || conf.RemotePort != port) {
             continue;
         }
-        tun->Write(decrBuffer, decrSize);
+        const auto decrBuffer = crypt->Decrypt(buffer);
+        if (!NUtils::ValidTunFrame(decrBuffer)) {
+            continue;
+        }
+        tun->Write(decrBuffer);
     }
 }
 

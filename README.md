@@ -109,5 +109,5 @@ sudo tun d
 ├── utils/         # Utility functions
 ├── configs.h      # Compile-time constants
 ├── errors.h       # Error codes and category
-└── types.h        # Common types (TBuffer, TConf)
+└── types.h        # Common types (TBytes, TConf)
 ```

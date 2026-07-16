@@ -5,11 +5,13 @@
 #include <openssl/aes.h>
 #include <openssl/evp.h>
 
+#include <utility>
+
 namespace NCrypt {
 
-TCrypt::TCrypt(std::size_t maxBufferSize)
-: EncBuffer(maxBufferSize + AES_BLOCK_SIZE, 0)
-, DecBuffer(maxBufferSize + AES_BLOCK_SIZE, 0) {}
+TCrypt::TCrypt(std::size_t maxBytesSize)
+: EncBytes(maxBytesSize + AES_BLOCK_SIZE, 0)
+, DecBytes(maxBytesSize + AES_BLOCK_SIZE, 0) {}
 
 std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) noexcept {
     if (!DecodeCtx) {
@@ -24,7 +26,7 @@ std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) n
         return EErrorCode::IvSize;
     }
 
-    TBuffer decodeCipher(cipher.size(), 0);
+    TBytes decodeCipher(cipher.size(), 0);
     std::int32_t decodeCipherSize;
     std::int32_t decodeCipherSizeFinal;
 
@@ -53,7 +55,7 @@ std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) n
         return EErrorCode::KeySize;
     }
 
-    TBuffer decodeIv(iv.size(), 0);
+    TBytes decodeIv(iv.size(), 0);
     std::int32_t decodeIvSize;
     std::int32_t decodeIvSizeFinal;
 
@@ -93,58 +95,64 @@ std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) n
     return {};
 }
 
-std::tuple<
-    std::reference_wrapper<const TBuffer>,
-    std::size_t
-> TCrypt::Encrypt(const TBuffer& buffer, std::size_t size) noexcept {
+TBuffer TCrypt::Encrypt(TBuffer buffer) noexcept {
     if (!EncCtx) {
-        return {cref(EncBuffer), 0};
+        return {};
     }
 
-    if (size > EncBuffer.size()) {
-        return {cref(EncBuffer), 0};
+    if (buffer.size() > EncBytes.size()) {
+        return {};
     }
 
     EVP_EncryptInit_ex(EncCtx.get(), nullptr, nullptr, nullptr, nullptr);
 
     std::int32_t sizeEnc;
-    if (auto ret = EVP_EncryptUpdate(EncCtx.get(), EncBuffer.data(), &sizeEnc, buffer.data(), size); ret == 0) {
-        return {cref(EncBuffer), 0};
+    if (auto ret = EVP_EncryptUpdate(EncCtx.get(), EncBytes.data(), &sizeEnc, buffer.data(), buffer.size()); ret == 0) {
+        return {};
     }
 
     std::int32_t sizeEncFinal;
-    if (auto ret = EVP_EncryptFinal_ex(EncCtx.get(), EncBuffer.data() + sizeEnc, &sizeEncFinal); ret == 0) {
-        return {cref(EncBuffer), 0};
+    if (auto ret = EVP_EncryptFinal_ex(EncCtx.get(), EncBytes.data() + sizeEnc, &sizeEncFinal); ret == 0) {
+        return {};
     }
 
-    return {cref(EncBuffer), sizeEnc + sizeEncFinal};
+    sizeEnc += sizeEncFinal;
+
+    if (!std::in_range<std::size_t>(sizeEnc)) {
+        return {};
+    }
+
+    return {EncBytes.begin(), static_cast<std::size_t>(sizeEnc)};
 }
 
-std::tuple<
-    std::reference_wrapper<const TBuffer>,
-    std::size_t
-> TCrypt::Decrypt(const TBuffer& buffer, std::size_t size) noexcept {
+TBuffer TCrypt::Decrypt(TBuffer buffer) noexcept {
     if (!DecCtx) {
-        return {cref(DecBuffer), 0};
+        return {};
     }
 
-    if (size > DecBuffer.size()) {
-        return {cref(DecBuffer), 0};
+    if (buffer.size() > DecBytes.size()) {
+        return {};
     }
 
     EVP_DecryptInit_ex(DecCtx.get(), nullptr, nullptr, nullptr, nullptr);
 
     std::int32_t sizeDec;
-    if (auto ret = EVP_DecryptUpdate(DecCtx.get(), DecBuffer.data(), &sizeDec, buffer.data(), size); ret == 0) {
-        return {cref(DecBuffer), 0};
+    if (auto ret = EVP_DecryptUpdate(DecCtx.get(), DecBytes.data(), &sizeDec, buffer.data(), buffer.size()); ret == 0) {
+        return {};
     }
 
     std::int32_t sizeDecFinal;
-    if (auto ret = EVP_DecryptFinal_ex(DecCtx.get(), DecBuffer.data() + sizeDec, &sizeDecFinal); ret == 0) {
-        return {cref(DecBuffer), 0};
+    if (auto ret = EVP_DecryptFinal_ex(DecCtx.get(), DecBytes.data() + sizeDec, &sizeDecFinal); ret == 0) {
+        return {};
     }
 
-    return {cref(DecBuffer), sizeDec + sizeDecFinal};
+    sizeDec += sizeDecFinal;
+
+    if (!std::in_range<std::size_t>(sizeDec)) {
+        return {};
+    }
+
+    return {DecBytes.begin(), static_cast<std::size_t>(sizeDec)};
 }
 
 }

@@ -11,8 +11,8 @@
 
 namespace NUtils {
 
-bool ValidTunFrame(const TBuffer& buffer, std::size_t size) noexcept {
-    if (size < 24) {
+bool ValidTunFrame(TBuffer buffer) noexcept {
+    if (buffer.size() < 24) {
         return false;
     }
 
@@ -22,8 +22,8 @@ bool ValidTunFrame(const TBuffer& buffer, std::size_t size) noexcept {
         && buffer[3] == 0;
 }
 
-std::uint32_t GetSrcIpFromTunFrame(const TBuffer& buffer, std::size_t size) noexcept {
-    if (size < 20) {
+std::uint32_t GetSrcIpFromTunFrame(TBuffer buffer) noexcept {
+    if (buffer.size() < 20) {
         return 0;
     }
 
@@ -32,8 +32,8 @@ std::uint32_t GetSrcIpFromTunFrame(const TBuffer& buffer, std::size_t size) noex
     return val;
 }
 
-std::uint32_t GetDstIpFromTunFrame(const TBuffer& buffer, std::size_t size) noexcept {
-    if (size < 24) {
+std::uint32_t GetDstIpFromTunFrame(TBuffer buffer) noexcept {
+    if (buffer.size() < 24) {
         return 0;
     }
 

@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <utility>
+
 namespace NSocket {
 
 TSocket::~TSocket() {
@@ -16,9 +18,9 @@ TSocket::~TSocket() {
     }
 }
 
-TSocket::TSocket(std::size_t maxBufferSize)
-: MaxBufferSize(maxBufferSize)
-, Buffer(MaxBufferSize, 0) { }
+TSocket::TSocket(std::size_t maxBytesSize)
+: MaxBytesSize(maxBytesSize)
+, Bytes(MaxBytesSize, 0) { }
 
 std::error_code TSocket::Init(
     std::uint32_t localIp,
@@ -60,12 +62,11 @@ std::int32_t TSocket::GetFd() const noexcept {
 }
 
 void TSocket::Write(
-    const TBuffer& buffer,
-    std::size_t size,
+    TBuffer buffer,
     std::uint32_t remoteIp,
     std::uint16_t remotePort
 ) const noexcept {
-    if (Fd < 0 || size == 0) {
+    if (Fd < 0 || buffer.size() == 0) {
         return;
     }
 
@@ -79,7 +80,7 @@ void TSocket::Write(
     };
 
     iovec iov[] = {
-        { .iov_base = const_cast<std::uint8_t*>(buffer.data()), .iov_len = size }
+        { .iov_base = const_cast<std::uint8_t*>(buffer.data()), .iov_len = buffer.size() }
     };
 
     const msghdr msg = {
@@ -100,19 +101,18 @@ void TSocket::Write(
 }
 
 std::tuple<
-    std::reference_wrapper<const TBuffer>,
-    std::size_t,
+    TBuffer,
     std::uint32_t,
     std::uint16_t
 > TSocket::Read() noexcept {
     if (Fd < 0) {
-        return {cref(Buffer), 0, {}, 0};
+        return {{}, 0, 0};
     }
 
     sockaddr_in sockaddrRemote;
 
     iovec iov[] = {
-        { .iov_base = Buffer.data(), .iov_len = MaxBufferSize }
+        { .iov_base = Bytes.data(), .iov_len = MaxBytesSize }
     };
 
     msghdr msg = {
@@ -127,11 +127,11 @@ std::tuple<
 
     const auto readSize = recvmsg(Fd, &msg, 0);
 
-    if (readSize <= 0) {
-        return {cref(Buffer), 0, {}, 0};
+    if (!std::in_range<std::size_t>(readSize)) {
+        return {{}, 0, 0};
     }
 
-    return {cref(Buffer), readSize, sockaddrRemote.sin_addr.s_addr, ntohs(sockaddrRemote.sin_port)};
+    return {{Bytes.begin(), static_cast<std::size_t>(readSize)}, sockaddrRemote.sin_addr.s_addr, ntohs(sockaddrRemote.sin_port)};
 }
 
 }
