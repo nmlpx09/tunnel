@@ -18,7 +18,10 @@ void tx(
     NIpsStorage::TIpsStoragePtr ipsStorage
 ) noexcept {
     while(true) {
-        if (!poll->RunOne()) {
+        const auto result = poll->RunOne();
+        if (!result) {
+            break;
+        } else if(!result.value()) {
             continue;
         }
         const auto buffer = tun->Read();
@@ -42,7 +45,10 @@ void rx(
     NIpsStorage::TIpsStoragePtr ipsStorage
 ) noexcept {
     while(true) {
-        if (!poll->RunOne()) {
+        const auto result = poll->RunOne();
+        if (!result) {
+            break;
+        } else if(!result.value()) {
             continue;
         }
         const auto [buffer, ip, port] = socket->Read();
@@ -90,7 +96,7 @@ int main() {
             return 4;
         }
 
-        if (auto ec = pollTun->RegisterFd(tun); ec) {
+        if (auto ec = pollTun->RegisterFd(tun->GetFd()); ec) {
             std::cerr << ec.message() << std::endl;
             return 5;
         }
@@ -102,7 +108,7 @@ int main() {
             return 6;
         }
 
-        if (auto ec = pollSocket->RegisterFd(socket); ec) {
+        if (auto ec = pollSocket->RegisterFd(socket->GetFd()); ec) {
             std::cerr << ec.message() << std::endl;
             return 7;
         }

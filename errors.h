@@ -11,8 +11,11 @@ enum EErrorCode {
     InitEncrypt,
     InitDecrypt,
     EpollAdd,
+    EpollInit,
     EpollZeroInit,
     EpollCreate,
+    EpollExit,
+    EpollWaitTime,
     SocketOpen,
     SocketBind,
     SocketConfig,
@@ -61,10 +64,16 @@ public:
                 return "init decrypt error";
             case EpollAdd:
                 return "epoll add error";
+            case EpollInit:
+                return "epoll init error";
             case EpollZeroInit:
-                return "epoll zero init error";
+                return "epoll events zero init error";
             case EpollCreate:
                 return "epoll create error";
+            case EpollExit:
+                return "epoll exit error";
+            case EpollWaitTime:
+                return "epoll wait time must be less than 10s";
             case SocketOpen:
                 return "socket open error";
             case SocketBind:

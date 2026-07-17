@@ -5,6 +5,7 @@
 #include <sys/epoll.h>
 
 #include <cstdint>
+#include <expected>
 #include <memory>
 #include <system_error>
 #include <vector>
@@ -23,33 +24,16 @@ public:
 
     std::error_code Init() noexcept;
 
-    template <class TFdProviderPtr>
-    std::error_code RegisterFd(TFdProviderPtr fdProvider) noexcept {
-        const auto fd = fdProvider->GetFd();
+    std::error_code RegisterFd(std::int32_t fd) noexcept;
 
-        auto event = epoll_event {
-            .events = EPOLLIN,
-            .data = {
-                .fd = fd
-            }
-        };
-        if (auto ret = epoll_ctl(Fd, EPOLL_CTL_ADD, fd, &event); ret < 0) {
-            return EErrorCode::EpollAdd;
-        }
-
-        Handlers.insert(fd);
-
-        return {};
-    }
-
-    bool RunOne() noexcept;
+    std::expected<bool, std::error_code> RunOne() noexcept;
 
 private:
     std::int32_t Fd = -1;
     std::size_t MaxPollEvents = 1;
     std::int32_t MaxPollTimeOut = -1;
     std::vector<epoll_event> Events;
-    std::unordered_set<std::int32_t> Handlers;
+    std::unordered_set<std::int32_t> PollFds;
 };
 
 using TPollPtr = std::shared_ptr<TPoll>;

@@ -75,7 +75,7 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
     if (isClient) {
         if (auto* value = std::getenv("REMOTE_IP"); value != nullptr) {
             std::uint32_t ip;
-            if (auto ret = inet_pton(AF_INET, value, &ip); ret == 0) {
+            if (auto ret = inet_pton(AF_INET, value, &ip); ret <= 0) {
                 return {EErrorCode::RemoteIp, {}};
             }
             conf.RemoteIp = ip;

@@ -1,6 +1,6 @@
 CXX       ?= g++
-CXXFLAGS  := -std=c++20 -pedantic -Wall -W -Werror -Wextra -I.
-LDFLAGS   := -lcrypto -lpthread
+CXXFLAGS  := -std=c++23 -pedantic -Wall -W -Werror -Wextra -I.
+LDFLAGS   := -lcrypto -pthread
 
 PREFIX    ?= /usr
 DESTDIR   ?=
@@ -49,9 +49,6 @@ client/%.o: client/%.cpp
 	$(COMPILE)
 
 server/%.o: server/%.cpp
-	$(COMPILE)
-
-context/%.o: context/%.cpp
 	$(COMPILE)
 
 crypt/%.o: crypt/%.cpp
