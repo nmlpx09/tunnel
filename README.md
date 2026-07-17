@@ -1,14 +1,33 @@
 # tunnel
 
-Simple UDP tunnel with AES-128-CBC encryption. No sessions or handshakes — stateless and lightweight.
+Simple UDP tunnel with AES-128-CBC encryption. No sessions, no handshakes — stateless and lightweight.
 
 ## How It Works
 
 The tunnel creates a virtual TUN network interface and forwards all IP traffic through an encrypted UDP connection between client and server. The server NATs outgoing traffic to the internet and relays responses back through the tunnel.
 
 ```
-[ Client ] --(encrypted UDP)--> [ Server ] --(NAT)--> Internet
+[ App on Client ] -> [ TUN ] -> [ encrypt ] -> [ UDP ] -> [ decrypt ] -> [ TUN ] -> [ Server NAT ] -> Internet
+                                                                              ^
+                                                                              |
+[ App on Client ] <- [ TUN ] <- [ decrypt ] <- [ UDP ] <- [ encrypt ] <- [ TUN ] <- [ Server NAT ] <- Internet
 ```
+
+Each side runs two threads:
+- **TX thread** — polls the TUN device, encrypts outgoing packets, sends via UDP
+- **RX thread** — polls the UDP socket, decrypts incoming packets, writes to TUN
+
+The server maintains an IP storage that dynamically maps source IPs from decrypted TUN frames to the client's external IP:port, enabling bidirectional NAT traversal without manual configuration.
+
+## Features
+
+- AES-128-CBC encryption with base64-encoded keys (OpenSSL EVP)
+- Linux epoll-based I/O multiplexing
+- Non-blocking UDP sockets
+- Automatic client IP tracking on the server side
+- Stateless — no sessions, handshakes, or connection state
+- C++23 with `-O3` release builds
+- Installable on Linux and rooted Android (Termux)
 
 ## Requirements
 
@@ -109,5 +128,5 @@ sudo tun d
 ├── utils/         # Utility functions
 ├── configs.h      # Compile-time constants
 ├── errors.h       # Error codes and category
-└── types.h        # Common types (TBytes, TConf)
+└── types.h        # Common types (TBuffer, TBufferView, TConf)
 ```

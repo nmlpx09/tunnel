@@ -5,8 +5,10 @@
 namespace NPoll {
 
 TPoll::~TPoll() {
-    close(Fd);
-    Fd = -1;
+    if (Fd >= 0) {
+        close(Fd);
+        Fd = -1;
+    }
 }
 
 TPoll::TPoll(std::int32_t maxPollTimeOut)

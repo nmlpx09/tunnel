@@ -5,8 +5,8 @@
 #include <string>
 #include <span>
 
-using TBytes = std::vector<std::uint8_t>;
-using TBuffer = std::span<const std::uint8_t>;
+using TBuffer = std::vector<std::uint8_t>;
+using TBufferView = std::span<const std::uint8_t>;
 
 struct TConf {
     std::string TunDevice;

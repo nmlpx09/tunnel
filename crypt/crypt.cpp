@@ -10,8 +10,8 @@
 namespace NCrypt {
 
 TCrypt::TCrypt(std::size_t maxBytesSize)
-: EncBytes(maxBytesSize + AES_BLOCK_SIZE, 0)
-, DecBytes(maxBytesSize + AES_BLOCK_SIZE, 0) {}
+: EncBuffer(maxBytesSize + AES_BLOCK_SIZE, 0)
+, DecBuffer(maxBytesSize + AES_BLOCK_SIZE, 0) {}
 
 std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) noexcept {
     if (!DecodeCtx) {
@@ -26,7 +26,7 @@ std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) n
         return EErrorCode::IvSize;
     }
 
-    TBytes decodeCipher(cipher.size(), 0);
+    TBuffer decodeCipher(cipher.size(), 0);
     std::int32_t decodeCipherSize;
     std::int32_t decodeCipherSizeFinal;
 
@@ -55,7 +55,7 @@ std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) n
         return EErrorCode::KeySize;
     }
 
-    TBytes decodeIv(iv.size(), 0);
+    TBuffer decodeIv(iv.size(), 0);
     std::int32_t decodeIvSize;
     std::int32_t decodeIvSizeFinal;
 
@@ -95,24 +95,24 @@ std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) n
     return {};
 }
 
-TBuffer TCrypt::Encrypt(TBuffer buffer) noexcept {
+TBufferView TCrypt::Encrypt(TBufferView buffer) noexcept {
     if (!EncCtx) {
         return {};
     }
 
-    if (buffer.size() > EncBytes.size()) {
+    if (buffer.size() > EncBuffer.size()) {
         return {};
     }
 
     EVP_EncryptInit_ex(EncCtx.get(), nullptr, nullptr, nullptr, nullptr);
 
     std::int32_t sizeEnc;
-    if (auto ret = EVP_EncryptUpdate(EncCtx.get(), EncBytes.data(), &sizeEnc, buffer.data(), buffer.size()); ret == 0) {
+    if (auto ret = EVP_EncryptUpdate(EncCtx.get(), EncBuffer.data(), &sizeEnc, buffer.data(), buffer.size()); ret == 0) {
         return {};
     }
 
     std::int32_t sizeEncFinal;
-    if (auto ret = EVP_EncryptFinal_ex(EncCtx.get(), EncBytes.data() + sizeEnc, &sizeEncFinal); ret == 0) {
+    if (auto ret = EVP_EncryptFinal_ex(EncCtx.get(), EncBuffer.data() + sizeEnc, &sizeEncFinal); ret == 0) {
         return {};
     }
 
@@ -122,27 +122,27 @@ TBuffer TCrypt::Encrypt(TBuffer buffer) noexcept {
         return {};
     }
 
-    return {EncBytes.begin(), static_cast<std::size_t>(sizeEnc)};
+    return {EncBuffer.begin(), static_cast<std::size_t>(sizeEnc)};
 }
 
-TBuffer TCrypt::Decrypt(TBuffer buffer) noexcept {
+TBufferView TCrypt::Decrypt(TBufferView buffer) noexcept {
     if (!DecCtx) {
         return {};
     }
 
-    if (buffer.size() > DecBytes.size()) {
+    if (buffer.size() > DecBuffer.size()) {
         return {};
     }
 
     EVP_DecryptInit_ex(DecCtx.get(), nullptr, nullptr, nullptr, nullptr);
 
     std::int32_t sizeDec;
-    if (auto ret = EVP_DecryptUpdate(DecCtx.get(), DecBytes.data(), &sizeDec, buffer.data(), buffer.size()); ret == 0) {
+    if (auto ret = EVP_DecryptUpdate(DecCtx.get(), DecBuffer.data(), &sizeDec, buffer.data(), buffer.size()); ret == 0) {
         return {};
     }
 
     std::int32_t sizeDecFinal;
-    if (auto ret = EVP_DecryptFinal_ex(DecCtx.get(), DecBytes.data() + sizeDec, &sizeDecFinal); ret == 0) {
+    if (auto ret = EVP_DecryptFinal_ex(DecCtx.get(), DecBuffer.data() + sizeDec, &sizeDecFinal); ret == 0) {
         return {};
     }
 
@@ -152,7 +152,7 @@ TBuffer TCrypt::Decrypt(TBuffer buffer) noexcept {
         return {};
     }
 
-    return {DecBytes.begin(), static_cast<std::size_t>(sizeDec)};
+    return {DecBuffer.begin(), static_cast<std::size_t>(sizeDec)};
 }
 
 }

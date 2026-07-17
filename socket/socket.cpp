@@ -18,14 +18,18 @@ TSocket::~TSocket() {
     }
 }
 
-TSocket::TSocket(std::size_t maxBytesSize)
-: MaxBytesSize(maxBytesSize)
-, Bytes(MaxBytesSize, 0) { }
+TSocket::TSocket(std::size_t maxBufferSize)
+: MaxBufferSize(maxBufferSize)
+, Buffer(MaxBufferSize, 0) { }
 
 std::error_code TSocket::Init(
     std::uint32_t localIp,
     std::uint16_t localPort
 ) noexcept {
+    if (Fd >= 0) {
+        return {};
+    }
+
     if (Fd = socket(AF_INET, SOCK_DGRAM, 0); Fd < 0) {
         return EErrorCode::SocketOpen;
     }
@@ -62,7 +66,7 @@ std::int32_t TSocket::GetFd() const noexcept {
 }
 
 void TSocket::Write(
-    TBuffer buffer,
+    TBufferView buffer,
     std::uint32_t remoteIp,
     std::uint16_t remotePort
 ) const noexcept {
@@ -101,7 +105,7 @@ void TSocket::Write(
 }
 
 std::tuple<
-    TBuffer,
+    TBufferView,
     std::uint32_t,
     std::uint16_t
 > TSocket::Read() noexcept {
@@ -112,7 +116,7 @@ std::tuple<
     sockaddr_in sockaddrRemote;
 
     iovec iov[] = {
-        { .iov_base = Bytes.data(), .iov_len = MaxBytesSize }
+        { .iov_base = Buffer.data(), .iov_len = MaxBufferSize }
     };
 
     msghdr msg = {
@@ -131,7 +135,7 @@ std::tuple<
         return {{}, 0, 0};
     }
 
-    return {{Bytes.begin(), static_cast<std::size_t>(readSize)}, sockaddrRemote.sin_addr.s_addr, ntohs(sockaddrRemote.sin_port)};
+    return {{Buffer.begin(), static_cast<std::size_t>(readSize)}, sockaddrRemote.sin_addr.s_addr, ntohs(sockaddrRemote.sin_port)};
 }
 
 }

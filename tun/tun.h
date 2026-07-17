@@ -12,7 +12,7 @@ namespace NTun {
 
 struct TTun {
 public:
-    TTun(std::size_t maxBytesSize);
+    TTun(std::size_t maxBufferSize);
     TTun(const TTun&) = delete;
     TTun(TTun&&) = delete;
     TTun& operator=(const TTun&) = delete;
@@ -22,14 +22,14 @@ public:
     std::error_code Init(const std::string& deviceName) noexcept;
     std::int32_t GetFd() const noexcept;
 
-    void Write(TBuffer buffer) const noexcept;
+    void Write(TBufferView buffer) const noexcept;
 
-    TBuffer Read() noexcept;
+    TBufferView Read() noexcept;
 
 private:
     std::int32_t Fd = -1;
-    std::size_t MaxBytesSize = 0;
-    TBytes Bytes;
+    std::size_t MaxBufferSize = 0;
+    TBuffer Buffer;
 };
 
 using TTunPtr = std::shared_ptr<TTun>;

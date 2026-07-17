@@ -23,9 +23,9 @@ public:
 
     std::error_code Init(const std::string& cipher, const std::string& iv) noexcept;
 
-    TBuffer Encrypt(TBuffer buffer) noexcept;
+    TBufferView Encrypt(TBufferView buffer) noexcept;
 
-    TBuffer Decrypt(TBuffer buffer) noexcept;
+    TBufferView Decrypt(TBufferView buffer) noexcept;
 
 private:
     using TCipherCtxPtr = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
@@ -36,8 +36,8 @@ private:
 
     TDecodeCtxPtr DecodeCtx = TDecodeCtxPtr{EVP_ENCODE_CTX_new(), &EVP_ENCODE_CTX_free};
 
-    TBytes EncBytes;
-    TBytes DecBytes;
+    TBuffer EncBuffer;
+    TBuffer DecBuffer;
 };
 
 using TCryptPtr = std::shared_ptr<TCrypt>;
