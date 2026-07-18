@@ -36,7 +36,7 @@ std::error_code TSocket::Init(
 
     const sockaddr_in sockaddrClient = sockaddr_in {
         .sin_family = AF_INET,
-        .sin_port = htons(localPort),
+        .sin_port = localPort,
         .sin_addr = {
             .s_addr = localIp
         },
@@ -76,7 +76,7 @@ void TSocket::Write(
 
     auto sockaddrRemote = sockaddr_in {
         .sin_family = AF_INET,
-        .sin_port = htons(remotePort),
+        .sin_port = remotePort,
         .sin_addr = {
             .s_addr = remoteIp
         },
@@ -135,7 +135,7 @@ std::tuple<
         return {{}, 0, 0};
     }
 
-    return {{Buffer.begin(), static_cast<std::size_t>(readSize)}, sockaddrRemote.sin_addr.s_addr, ntohs(sockaddrRemote.sin_port)};
+    return {{Buffer.begin(), static_cast<std::size_t>(readSize)}, sockaddrRemote.sin_addr.s_addr, sockaddrRemote.sin_port};
 }
 
 }

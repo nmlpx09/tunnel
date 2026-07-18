@@ -27,8 +27,8 @@ std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) n
     }
 
     TBuffer decodeCipher(cipher.size(), 0);
-    std::int32_t decodeCipherSize;
-    std::int32_t decodeCipherSizeFinal;
+    std::int32_t decodeCipherSize = 0;
+    std::int32_t decodeCipherSizeFinal = 0;
 
     EVP_DecodeInit(DecodeCtx.get());
     if(
@@ -56,8 +56,8 @@ std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) n
     }
 
     TBuffer decodeIv(iv.size(), 0);
-    std::int32_t decodeIvSize;
-    std::int32_t decodeIvSizeFinal;
+    std::int32_t decodeIvSize = 0;
+    std::int32_t decodeIvSizeFinal = 0;
 
     EVP_DecodeInit(DecodeCtx.get());
     if(
@@ -106,12 +106,12 @@ TBufferView TCrypt::Encrypt(TBufferView buffer) noexcept {
 
     EVP_EncryptInit_ex(EncCtx.get(), nullptr, nullptr, nullptr, nullptr);
 
-    std::int32_t sizeEnc;
+    std::int32_t sizeEnc = 0;
     if (auto ret = EVP_EncryptUpdate(EncCtx.get(), EncBuffer.data(), &sizeEnc, buffer.data(), buffer.size()); ret == 0) {
         return {};
     }
 
-    std::int32_t sizeEncFinal;
+    std::int32_t sizeEncFinal = 0;
     if (auto ret = EVP_EncryptFinal_ex(EncCtx.get(), EncBuffer.data() + sizeEnc, &sizeEncFinal); ret == 0) {
         return {};
     }
@@ -136,12 +136,12 @@ TBufferView TCrypt::Decrypt(TBufferView buffer) noexcept {
 
     EVP_DecryptInit_ex(DecCtx.get(), nullptr, nullptr, nullptr, nullptr);
 
-    std::int32_t sizeDec;
+    std::int32_t sizeDec = 0;
     if (auto ret = EVP_DecryptUpdate(DecCtx.get(), DecBuffer.data(), &sizeDec, buffer.data(), buffer.size()); ret == 0) {
         return {};
     }
 
-    std::int32_t sizeDecFinal;
+    std::int32_t sizeDecFinal = 0;
     if (auto ret = EVP_DecryptFinal_ex(DecCtx.get(), DecBuffer.data() + sizeDec, &sizeDecFinal); ret == 0) {
         return {};
     }

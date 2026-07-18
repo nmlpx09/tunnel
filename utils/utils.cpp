@@ -88,7 +88,7 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
                 if (const auto port = std::stoul(value); port > std::numeric_limits<std::uint16_t>::max() || port == 0) {
                     return {EErrorCode::RemotePortConvert, {}};
                 } else {
-                    conf.RemotePort = port;
+                    conf.RemotePort = htons(port);
                 }
             } catch (const std::exception&) {
                 return {EErrorCode::RemotePortConvert, {}};
@@ -102,7 +102,7 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
                 if (const auto port = std::stoul(value); port > std::numeric_limits<std::uint16_t>::max() || port == 0) {
                     return {EErrorCode::LocalPortConvert, {}};
                 } else {
-                    conf.LocalPort = port;
+                    conf.LocalPort = htons(port);
                 }
             } catch (const std::exception&) {
                 return {EErrorCode::LocalPortConvert, {}};
