@@ -91,7 +91,7 @@ case $1 in
     "d")
         ! check_interface && echo "interface $TUN_DEVICE not exists" && exit 1
 
-        start-stop-daemon --stop --signal 9 \
+        start-stop-daemon --stop --signal 2 \
             --pidfile $PID_FILE --remove-pidfile || :
 
         remove_rules || :

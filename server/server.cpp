@@ -143,7 +143,7 @@ int main() {
 
         std::cerr << "run server" << std::endl;
 
-        signal(SIGKILL, SignalHandler);
+        signal(SIGINT, SignalHandler);
 
         tTx.join();
         tRx.join();
