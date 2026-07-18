@@ -9,9 +9,9 @@
 
 namespace NCrypt {
 
-TCrypt::TCrypt(std::size_t maxBytesSize)
-: EncBuffer(maxBytesSize + AES_BLOCK_SIZE, 0)
-, DecBuffer(maxBytesSize + AES_BLOCK_SIZE, 0) {}
+TCrypt::TCrypt(std::size_t maxBufferSize)
+: EncBuffer(maxBufferSize + AES_BLOCK_SIZE, 0)
+, DecBuffer(maxBufferSize + AES_BLOCK_SIZE, 0) {}
 
 std::error_code TCrypt::Init(const std::string& cipher, const std::string& iv) noexcept {
     if (!DecodeCtx) {

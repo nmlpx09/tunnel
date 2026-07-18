@@ -138,12 +138,12 @@ int main() {
             return 9;
         }
 
+        signal(SIGINT, SignalHandler);
+
         std::thread tTx(tx, pollTun, tun, socket, crypt, ipsStorage);
         std::thread tRx(rx, pollSocket, tun, socket, crypt, ipsStorage);
 
         std::cerr << "run server" << std::endl;
-
-        signal(SIGINT, SignalHandler);
 
         tTx.join();
         tRx.join();

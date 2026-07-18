@@ -113,7 +113,14 @@ std::tuple<
         return {{}, 0, 0};
     }
 
-    sockaddr_in sockaddrRemote;
+    auto sockaddrRemote = sockaddr_in {
+        .sin_family = AF_INET,
+        .sin_port = 0,
+        .sin_addr = {
+            .s_addr = 0
+        },
+        .sin_zero = {0}
+    };
 
     iovec iov[] = {
         { .iov_base = Buffer.data(), .iov_len = MaxBufferSize }
