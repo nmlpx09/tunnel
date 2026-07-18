@@ -46,8 +46,8 @@ function add_rules {
 }
 
 function remove_rules {
-    ip route del table $LOCAL_DEVICE $REMOTE_IP || :
-    ip link delete $TUN_DEVICE || :
+    ip route del table $LOCAL_DEVICE $REMOTE_IP
+    ip link delete $TUN_DEVICE
 }
 
 function check_vars {
@@ -104,7 +104,7 @@ case $1 in
         start-stop-daemon --stop --signal 9 \
             --pidfile $PID_FILE --remove-pidfile || :
 
-        remove_rules
+        remove_rules || :
         ;;
     *)
         echo "Usage: $0 {c|d}"

@@ -38,9 +38,9 @@ function add_rules {
 }
 
 function remove_rules {
-    iptables -t nat -D POSTROUTING -s $TUN_IP/24 -o $LOCAL_DEVICE -j MASQUERADE || :
-    sysctl net.ipv4.ip_forward=0 || :
-    ip link delete $TUN_DEVICE || :
+    iptables -t nat -D POSTROUTING -s $TUN_IP/24 -o $LOCAL_DEVICE -j MASQUERADE
+    sysctl net.ipv4.ip_forward=0
+    ip link delete $TUN_DEVICE
 }
 
 function check_vars {
@@ -93,7 +93,7 @@ case $1 in
         start-stop-daemon --stop --signal 9 \
             --pidfile $PID_FILE --remove-pidfile || :
 
-        remove_rules
+        remove_rules || :
         ;;
     *)
         echo "Usage: $0 {c|d}"
