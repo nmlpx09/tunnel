@@ -16,7 +16,7 @@ public:
     TElement(std::uint32_t ip, std::uint16_t port);
     TElement() = default;
 private:
-    friend class TIpsStorage;
+    friend struct TIpsStorage;
     std::uint32_t Ip;
     std::uint16_t Port = 0;
 };

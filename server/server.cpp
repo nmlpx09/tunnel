@@ -6,9 +6,18 @@
 #include <tun/tun.h>
 #include <utils/utils.h>
 
+#include <csignal>
 #include <iostream>
 #include <memory>
 #include <thread>
+
+namespace {
+    volatile std::sig_atomic_t signalStatus;
+}
+
+void SignalHandler(int signal) {
+    signalStatus = signal;
+}
 
 void tx(
     NPoll::TPollPtr poll,
@@ -17,7 +26,7 @@ void tx(
     NCrypt::TCryptPtr crypt,
     NIpsStorage::TIpsStoragePtr ipsStorage
 ) noexcept {
-    while(true) {
+    while(!signalStatus) {
         const auto result = poll->RunOne();
         if (!result) {
             break;
@@ -44,7 +53,7 @@ void rx(
     NCrypt::TCryptPtr crypt,
     NIpsStorage::TIpsStoragePtr ipsStorage
 ) noexcept {
-    while(true) {
+    while(!signalStatus) {
         const auto result = poll->RunOne();
         if (!result) {
             break;
@@ -133,6 +142,8 @@ int main() {
         std::thread tRx(rx, pollSocket, tun, socket, crypt, ipsStorage);
 
         std::cerr << "run server" << std::endl;
+
+        signal(SIGKILL, SignalHandler);
 
         tTx.join();
         tRx.join();
