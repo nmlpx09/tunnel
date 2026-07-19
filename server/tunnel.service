@@ -1,0 +1,24 @@
+[Unit]
+Description=Tunnel Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+PIDFile=/run/tun0.pid
+EnvironmentFile=
+ExecStartPre=/usr/bin/tun c
+ExecStart=/bin/true
+ExecStop=/usr/bin/tun d
+ExecReload=/usr/bin/tun r
+Restart=on-failure
+RestartSec=5
+
+LimitNOFILE=65535
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run
+NoNewPrivileges=false
+
+[Install]
+WantedBy=multi-user.target

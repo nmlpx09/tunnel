@@ -95,7 +95,34 @@ case $1 in
 
         remove_rules || :
         ;;
+
+    "r")
+        ! check_interface && echo "interface $TUN_DEVICE not exists" && exit 1
+
+        start-stop-daemon --stop --signal 2 \
+            --pidfile $PID_FILE --remove-pidfile
+
+        sleep 3
+
+        export TUN_DEVICE=$TUN_DEVICE
+        export TUN_MTU=$TUN_MTU
+        export LOCAL_PORT=$LOCAL_PORT
+        export KEYS_FILE=$KEYS_FILE
+
+        start-stop-daemon --start --background \
+            --make-pidfile --pidfile $PID_FILE \
+            --nicelevel -15 \
+            --exec /usr/bin/$BIN_NAME
+
+        sleep 1
+
+        if [ ! -f $PID_FILE ] || ! ps -p `cat $PID_FILE` > /dev/null ; then
+            echo "tun not start"
+            remove_rules
+            exit 1
+        fi
+        ;;
     *)
-        echo "Usage: $0 {c|d}"
+        echo "Usage: $0 {c|d|r}"
         ;;
 esac

@@ -8,6 +8,8 @@ DESTDIR   ?=
 TARGET_CLIENT := client/tun
 TARGET_SERVER := server/tun
 
+DIRS := client server crypt ips_storage poll socket tun utils
+
 COMMON_OBJ := \
 	crypt/crypt.o \
 	poll/poll.o \
@@ -18,14 +20,17 @@ COMMON_OBJ := \
 CLIENT_OBJ := client/client.o $(COMMON_OBJ)
 SERVER_OBJ := server/server.o ips_storage/ips_storage.o $(COMMON_OBJ)
 
-DEPFLAGS  = -MMD -MP
-COMPILE   = $(CXX) $(DEPFLAGS) $(CXXFLAGS) -c $< -o $@
+DEPFLAGS = -MMD -MP
+COMPILE  = $(CXX) $(DEPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-ALL_TARGETS := $(TARGET_CLIENT) $(TARGET_SERVER)
+ALL_DEPS := $(CLIENT_OBJ:.o=.d) $(SERVER_OBJ:.o=.d)
 
-.PHONY: all client server clean install install_client install_server \
+.PHONY: all client server clean \
+        install install_client install_server \
         uninstall uninstall_client uninstall_server \
-        install_termux uninstall_termux debug release
+        install_termux uninstall_termux \
+        install_service uninstall_service \
+        debug release
 
 ifdef DEBUG
 CXXFLAGS += -g -O0 -DDEBUG
@@ -45,36 +50,17 @@ $(TARGET_CLIENT): $(CLIENT_OBJ)
 $(TARGET_SERVER): $(SERVER_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS)
 
-client/%.o: client/%.cpp
-	$(COMPILE)
+define compile_rule
+$(1)/%.o: $(1)/%.cpp
+	$$(COMPILE)
+endef
 
-server/%.o: server/%.cpp
-	$(COMPILE)
+$(foreach dir,$(DIRS),$(eval $(call compile_rule,$(dir))))
 
-crypt/%.o: crypt/%.cpp
-	$(COMPILE)
-
-ips_storage/%.o: ips_storage/%.cpp
-	$(COMPILE)
-
-poll/%.o: poll/%.cpp
-	$(COMPILE)
-
-socket/%.o: socket/%.cpp
-	$(COMPILE)
-
-tun/%.o: tun/%.cpp
-	$(COMPILE)
-
-utils/%.o: utils/%.cpp
-	$(COMPILE)
-
--include $(CLIENT_OBJ:.o=.d) $(SERVER_OBJ:.o=.d)
+-include $(ALL_DEPS)
 
 clean:
-	rm -f $(CLIENT_OBJ) $(SERVER_OBJ) \
-	      $(CLIENT_OBJ:.o=.d) $(SERVER_OBJ:.o=.d) \
-	      $(TARGET_CLIENT) $(TARGET_SERVER)
+	rm -f $(CLIENT_OBJ) $(SERVER_OBJ) $(ALL_DEPS) $(TARGET_CLIENT) $(TARGET_SERVER)
 
 install: install_client install_server
 
@@ -95,6 +81,14 @@ uninstall_client:
 
 uninstall_server:
 	rm -f $(DESTDIR)$(PREFIX)/bin/tun0 $(DESTDIR)$(PREFIX)/bin/tun
+
+install_service: install_server
+	install -d $(DESTDIR)/etc/systemd/system
+	install -m 0644 server/tunnel.service $(DESTDIR)/etc/systemd/system/tunnel.service
+	systemctl daemon-reload
+
+uninstall_service:
+	rm -f $(DESTDIR)/etc/systemd/system/tunnel.service
 
 TERMUX_PREFIX := /data/data/com.termux/files/usr
 
