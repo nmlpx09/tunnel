@@ -85,7 +85,6 @@ uninstall_server:
 install_service: install_server
 	install -d $(DESTDIR)/etc/systemd/system
 	install -m 0644 server/tunnel.service $(DESTDIR)/etc/systemd/system/tunnel.service
-	systemctl daemon-reload
 
 uninstall_service:
 	rm -f $(DESTDIR)/etc/systemd/system/tunnel.service

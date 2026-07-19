@@ -60,6 +60,19 @@ sudo make install_server   # install server to /usr/bin
 sudo make uninstall        # remove
 ```
 
+### Server with systemd
+
+```bash
+sudo make install_service  # install server binary, shell script, systemd unit
+sudo systemctl daemon-reload
+sudo systemctl enable tunnel
+sudo systemctl start tunnel
+```
+
+```bash
+sudo make uninstall_service  # remove systemd unit
+```
+
 ### Termux
 
 ```bash
