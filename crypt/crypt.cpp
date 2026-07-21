@@ -46,14 +46,14 @@ std::error_code TCrypt::Init(const std::string& key) noexcept {
             reinterpret_cast<const unsigned char*>(key.c_str()),
             key.size()
         );
-        ret <= 0
+        ret == -1
     ) {
         return EErrorCode::InitKey;
     }
 
     if (
         auto ret = EVP_DecodeFinal(DecodeCtx.get(), decodeKey.data() + decodeKeySize, &decodeKeySizeFinal);
-        ret <= 0
+        ret == -1
     ) {
         return EErrorCode::InitKey;
     }
