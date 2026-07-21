@@ -122,7 +122,9 @@ TBufferView TCrypt::Encrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    return {EncBuffer.begin(), ciphertextLen + GCM_IV_TAG_SIZE};
+    const std::size_t totalLen = ciphertextLen + GCM_IV_TAG_SIZE;
+
+    return {EncBuffer.begin(), totalLen};
 }
 
 TBufferView TCrypt::Decrypt(TBufferView buffer) noexcept {
@@ -134,7 +136,7 @@ TBufferView TCrypt::Decrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    auto* iv = buffer.data();
+    const auto* iv = buffer.data();
 
     if (EVP_DecryptInit_ex(DecCtx.get(), nullptr, nullptr, nullptr, iv) != 1) {
         return {};
@@ -146,7 +148,7 @@ TBufferView TCrypt::Decrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    auto* ciphertext = buffer.data() + GCM_IV_SIZE;
+    const auto* ciphertext = buffer.data() + GCM_IV_SIZE;
     const std::int32_t ciphertextLen = buffer.size() - GCM_IV_TAG_SIZE;
 
     std::int32_t sizeDec = 0;
