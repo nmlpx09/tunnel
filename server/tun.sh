@@ -4,7 +4,7 @@ set -exu
 
 TUN_DEVICE=tun0
 TUN_IP=10.0.3.1
-TUN_MTU=1460
+TUN_MTU=1440
 
 LOCAL_DEVICE=`ip route get 1.1.1.1 | head -1 | cut -d ' ' -f 5`
 LOCAL_PORT=69

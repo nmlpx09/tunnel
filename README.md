@@ -1,6 +1,6 @@
 # tunnel
 
-Simple UDP tunnel with AES-128-CBC encryption. No sessions, no handshakes — stateless and lightweight.
+Simple UDP tunnel with AES-128-GCM encryption. No sessions, no handshakes — stateless and lightweight.
 
 ## How It Works
 
@@ -21,7 +21,7 @@ The server maintains an IP storage that dynamically maps source IPs from decrypt
 
 ## Features
 
-- AES-128-CBC encryption with base64-encoded keys (OpenSSL EVP)
+- AES-128-GCM authenticated encryption with random IV per packet (OpenSSL EVP)
 - Linux epoll-based I/O multiplexing
 - Non-blocking UDP sockets
 - Automatic client IP tracking on the server side
@@ -91,22 +91,20 @@ All configuration is done via environment variables:
 | `REMOTE_IP`    | Server IP address (client only)      |
 | `REMOTE_PORT`  | Server UDP port (client only)        |
 | `LOCAL_PORT`   | Local UDP port (server only)         |
-| `KEYS_FILE`    | Path to file with AES key and IV in base64 |
+| `KEYS_FILE`    | Path to file with AES-128 key in base64      |
 
 ### Keys File
 
-The keys file must contain the AES-128 key on the first line and the IV on the second line, both base64-encoded:
+The keys file must contain the AES-128 key on the first line, base64-encoded:
 
 ```
 <base64-encoded-16-byte-key>
-<base64-encoded-16-byte-iv>
 ```
 
 Generate with OpenSSL:
 
 ```bash
 openssl rand -base64 16 > /etc/tunnel/keys
-openssl rand -base64 16 >> /etc/tunnel/keys
 ```
 
 Copy the same keys file to both client and server.
@@ -133,7 +131,7 @@ sudo tun d
 .
 ├── client/        # Client entry point and shell scripts
 ├── server/        # Server entry point and shell scripts
-├── crypt/         # AES-128-CBC encryption/decryption (OpenSSL EVP)
+├── crypt/         # AES-128-GCM encryption/decryption (OpenSSL EVP)
 ├── ips_storage/   # Client IP tracking (server side)
 ├── poll/          # epoll-based I/O multiplexing
 ├── socket/        # UDP socket handling

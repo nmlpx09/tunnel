@@ -126,14 +126,14 @@ int main() {
 
         auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
 
-        auto keyPair = NUtils::LoadKeyPair(conf.KeysFile);
+        auto key = NUtils::LoadKey(conf.KeysFile);
 
-        if (!keyPair) {
-            std::cerr << "failed load key pair" << std::endl;
+        if (!key) {
+            std::cerr << "failed load key" << std::endl;
             return 8;
         }
 
-        if (auto ec = crypt->Init(keyPair->first, keyPair->second); ec) {
+        if (auto ec = crypt->Init(key.value()); ec) {
             std::cerr << ec.message() << std::endl;
             return 9;
         }

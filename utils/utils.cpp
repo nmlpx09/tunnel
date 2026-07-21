@@ -115,14 +115,13 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
     return {{}, std::move(conf)};
 }
 
-std::optional<std::pair<std::string, std::string>> LoadKeyPair(const std::string& keysFile) noexcept {
+std::optional<std::string> LoadKey(const std::string& keysFile) noexcept {
     std::ifstream file(keysFile);
-    std::string cipher;
-    std::string iv;
-    if (!file.is_open() || !std::getline(file, cipher) || !std::getline(file, iv)) {
+    std::string key;
+    if (!file.is_open() || !std::getline(file, key)) {
         return {};
     }
-    return std::make_pair(cipher, iv);
+    return key;
 }
 
 }

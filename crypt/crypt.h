@@ -5,7 +5,6 @@
 #include <types.h>
 
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <string>
 #include <system_error>
@@ -19,15 +18,20 @@ public:
     TCrypt(TCrypt&&) = delete;
     TCrypt& operator=(const TCrypt&) = delete;
     TCrypt& operator=(TCrypt&&) = delete;
-    ~TCrypt() = default;
+    ~TCrypt();
 
-    std::error_code Init(const std::string& cipher, const std::string& iv) noexcept;
+    std::error_code Init(const std::string& key) noexcept;
 
     TBufferView Encrypt(TBufferView buffer) noexcept;
 
     TBufferView Decrypt(TBufferView buffer) noexcept;
 
 private:
+    static constexpr std::size_t GCM_IV_SIZE = 12;
+    static constexpr std::size_t GCM_TAG_SIZE = 16;
+    static constexpr std::size_t AES_KEY_SIZE = 16;
+    static constexpr std::size_t GCM_IV_TAG_SIZE = GCM_IV_SIZE + GCM_TAG_SIZE;
+
     using TCipherCtxPtr = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
     using TDecodeCtxPtr = std::unique_ptr<EVP_ENCODE_CTX, decltype(&EVP_ENCODE_CTX_free)>;
 
