@@ -36,10 +36,10 @@ void tx(
         const auto buffer = tun->Read();
         if (buffer.size() == 0) {
             continue;
-        } else if (!NUtils::ValidTunFrame(buffer)) {
+        } else if (!NUtils::ValidIpv4Packet(buffer)) {
             continue;
         }
-        if (const auto value = ipsStorage->Get(NUtils::GetDstIpFromTunFrame(buffer)); value) {
+        if (const auto value = ipsStorage->Get(NUtils::GetDstIpFromIpv4Packet(buffer)); value) {
             const auto encrBuffer = crypt->Encrypt(buffer);
             socket->Write(encrBuffer, value->first, value->second);
         }
@@ -65,11 +65,11 @@ void rx(
             continue;
         }
         const auto decrBuffer = crypt->Decrypt(buffer);
-        if (!NUtils::ValidTunFrame(decrBuffer)) {
+        if (!NUtils::ValidIpv4Packet(decrBuffer)) {
             continue;
         }
 
-        ipsStorage->Add(NUtils::GetSrcIpFromTunFrame(decrBuffer), ip, port);
+        ipsStorage->Add(NUtils::GetSrcIpFromIpv4Packet(decrBuffer), ip, port);
 
         tun->Write(decrBuffer);
     }

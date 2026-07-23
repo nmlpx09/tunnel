@@ -35,7 +35,7 @@ void tx(
         const auto buffer = tun->Read();
         if (buffer.size() == 0) {
             continue;
-        } else if (!NUtils::ValidTunFrame(buffer)) {
+        } else if (!NUtils::ValidIpv4Packet(buffer)) {
             continue;
         }
         const auto encrBuffer = crypt->Encrypt(buffer);
@@ -64,7 +64,7 @@ void rx(
             continue;
         }
         const auto decrBuffer = crypt->Decrypt(buffer);
-        if (!NUtils::ValidTunFrame(decrBuffer)) {
+        if (!NUtils::ValidIpv4Packet(decrBuffer)) {
             continue;
         }
         tun->Write(decrBuffer);

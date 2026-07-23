@@ -7,7 +7,7 @@ REMOTE_PORT=69
 
 TUN_DEVICE=tun0
 TUN_IP=10.0.3.3
-TUN_MTU=1460
+TUN_MTU=1444
 
 LOCAL_DEVICE=`ip route get 1.1.1.1 | head -1 | cut -d ' ' -f 5`
 

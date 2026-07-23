@@ -11,34 +11,31 @@
 
 namespace NUtils {
 
-bool ValidTunFrame(TBufferView buffer) noexcept {
-    if (buffer.size() < 24) {
+bool ValidIpv4Packet(TBufferView buffer) noexcept {
+    if (buffer.size() < 20) {
         return false;
     }
 
-    return buffer[0] == 0
-        && buffer[1] == 0
-        && buffer[2] == 0x08
-        && buffer[3] == 0;
+    return (buffer[0] & 0xF0) == 0x40;
 }
 
-std::uint32_t GetSrcIpFromTunFrame(TBufferView buffer) noexcept {
+std::uint32_t GetSrcIpFromIpv4Packet(TBufferView buffer) noexcept {
+    if (buffer.size() < 20) {
+        return 0;
+    }
+
+    std::uint32_t val;
+    std::memcpy(&val, buffer.data() + 12, sizeof(val));
+    return val;
+}
+
+std::uint32_t GetDstIpFromIpv4Packet(TBufferView buffer) noexcept {
     if (buffer.size() < 20) {
         return 0;
     }
 
     std::uint32_t val;
     std::memcpy(&val, buffer.data() + 16, sizeof(val));
-    return val;
-}
-
-std::uint32_t GetDstIpFromTunFrame(TBufferView buffer) noexcept {
-    if (buffer.size() < 24) {
-        return 0;
-    }
-
-    std::uint32_t val;
-    std::memcpy(&val, buffer.data() + 20, sizeof(val));
     return val;
 }
 

@@ -11,11 +11,11 @@
 
 namespace NUtils {
 
-bool ValidTunFrame(TBufferView buffer) noexcept;
+bool ValidIpv4Packet(TBufferView buffer) noexcept;
 
-std::uint32_t GetSrcIpFromTunFrame(TBufferView buffer) noexcept;
+std::uint32_t GetSrcIpFromIpv4Packet(TBufferView buffer) noexcept;
 
-std::uint32_t GetDstIpFromTunFrame(TBufferView buffer) noexcept;
+std::uint32_t GetDstIpFromIpv4Packet(TBufferView buffer) noexcept;
 
 std::optional<std::string> LoadKey(const std::string& keysFile) noexcept;
 

@@ -35,7 +35,7 @@ std::error_code TTun::Init(const std::string& deviceName) noexcept {
 
     ifreq ifr;
     std::memset(&ifr, 0, sizeof(ifr));
-    ifr.ifr_flags = IFF_TUN;
+    ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
     std::strncpy(ifr.ifr_name, deviceName.c_str(), IFNAMSIZ - 1);
     ifr.ifr_name[IFNAMSIZ - 1] = '\0';
 
