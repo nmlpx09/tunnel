@@ -6,17 +6,18 @@
 #include <tun/tun.h>
 #include <utils/utils.h>
 
+#include <atomic>
 #include <csignal>
 #include <iostream>
 #include <memory>
 #include <thread>
 
 namespace {
-    volatile std::sig_atomic_t signalStatus;
+    std::atomic<std::sig_atomic_t> signalStatus{0};
 }
 
 void SignalHandler(int signal) {
-    signalStatus = signal;
+    signalStatus.store(signal, std::memory_order_relaxed);
 }
 
 void tx(
@@ -26,7 +27,7 @@ void tx(
     NCrypt::TCryptPtr crypt,
     NIpsStorage::TIpsStoragePtr ipsStorage
 ) noexcept {
-    while(!signalStatus) {
+    while(!signalStatus.load(std::memory_order_relaxed)) {
         const auto result = poll->RunOne();
         if (!result) {
             break;
@@ -53,7 +54,7 @@ void rx(
     NCrypt::TCryptPtr crypt,
     NIpsStorage::TIpsStoragePtr ipsStorage
 ) noexcept {
-    while(!signalStatus) {
+    while(!signalStatus.load(std::memory_order_relaxed)) {
         const auto result = poll->RunOne();
         if (!result) {
             break;
