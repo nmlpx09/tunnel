@@ -6,7 +6,7 @@
 #include <span>
 
 using TBuffer = std::vector<std::uint8_t>;
-using TBufferView = std::span<const std::uint8_t>;
+using TBufferView = std::span<TBuffer::value_type>;
 
 struct TConf {
     std::string TunDevice;

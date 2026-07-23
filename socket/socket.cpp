@@ -84,7 +84,7 @@ void TSocket::Write(
     };
 
     iovec iov[] = {
-        { .iov_base = const_cast<std::uint8_t*>(buffer.data()), .iov_len = buffer.size() }
+        { .iov_base = buffer.data(), .iov_len = buffer.size() }
     };
 
     const msghdr msg = {

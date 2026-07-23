@@ -142,7 +142,7 @@ TBufferView TCrypt::Decrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    auto* tag = const_cast<std::uint8_t*>(buffer.data()) + buffer.size() - GCM_TAG_SIZE;
+    auto* tag = buffer.data() + buffer.size() - GCM_TAG_SIZE;
 
     if (EVP_CIPHER_CTX_ctrl(DecCtx.get(), EVP_CTRL_GCM_SET_TAG, GCM_TAG_SIZE, tag) != 1) {
         return {};

@@ -7,31 +7,36 @@ Simple UDP tunnel with AES-128-GCM encryption. No sessions, no handshakes — st
 The tunnel creates a virtual TUN network interface and forwards all IP traffic through an encrypted UDP connection between client and server. The server NATs outgoing traffic to the internet and relays responses back through the tunnel.
 
 ```
-[ App on Client ] -> [ TUN ] -> [ encrypt ] -> [ UDP ] -> [ decrypt ] -> [ TUN ] -> [ Server NAT ] -> Internet
-                                                                              ^
-                                                                              |
-[ App on Client ] <- [ TUN ] <- [ decrypt ] <- [ UDP ] <- [ encrypt ] <- [ TUN ] <- [ Server NAT ] <- Internet
+[ App on Client ] -> [ TUN ] -> [ encrypt (AES-GCM) ] -> [ UDP ] -> [ decrypt ] -> [ TUN ] -> [ Server NAT ] -> Internet
+                                                                                                         ^
+                                                                                                         |
+[ App on Client ] <- [ TUN ] <- [ decrypt (AES-GCM) ] <- [ UDP ] <- [ encrypt ] <- [ TUN ] <- [ Server NAT ] <- Internet
 ```
+
+Each encrypted packet format: `[IV(12)][ciphertext][tag(16)]`
 
 Each side runs two threads:
 - **TX thread** — polls the TUN device, encrypts outgoing packets, sends via UDP
 - **RX thread** — polls the UDP socket, decrypts incoming packets, writes to TUN
 
-The server maintains an IP storage that dynamically maps source IPs from decrypted TUN frames to the client's external IP:port, enabling bidirectional NAT traversal without manual configuration.
+The server maintains an IP storage that dynamically maps source IPs from decrypted IPv4 packets to the client's external IP:port, enabling bidirectional NAT traversal without manual configuration.
 
 ## Features
 
 - AES-128-GCM authenticated encryption with random IV per packet (OpenSSL EVP)
+- Authentication tag verifies packet integrity and authenticity
+- TUN device with `IFF_NO_PI` — raw IP packets, no protocol header overhead
 - Linux epoll-based I/O multiplexing
 - Non-blocking UDP sockets
 - Automatic client IP tracking on the server side
 - Stateless — no sessions, handshakes, or connection state
 - C++23 with `-O3` release builds
 - Installable on Linux and rooted Android (Termux)
+- systemd service with restart support
 
 ## Requirements
 
-- g++ 10.2.1+
+- g++ 14.2.0+
 - make
 - libssl-dev (OpenSSL)
 
@@ -69,6 +74,12 @@ sudo systemctl enable tunnel
 sudo systemctl start tunnel
 ```
 
+Restart:
+
+```bash
+sudo systemctl reload tunnel   # or: sudo tun r
+```
+
 ```bash
 sudo make uninstall_service  # remove systemd unit
 ```
@@ -87,11 +98,11 @@ All configuration is done via environment variables:
 | Variable       | Description                          |
 |----------------|--------------------------------------|
 | `TUN_DEVICE`   | TUN device name (e.g. `tun0`)       |
-| `TUN_MTU`      | MTU size, max 1460                   |
+| `TUN_MTU`      | MTU size, max 1444                   |
 | `REMOTE_IP`    | Server IP address (client only)      |
 | `REMOTE_PORT`  | Server UDP port (client only)        |
 | `LOCAL_PORT`   | Local UDP port (server only)         |
-| `KEYS_FILE`    | Path to file with AES-128 key in base64      |
+| `KEYS_FILE`    | Path to file with AES-128 key in base64 |
 
 ### Keys File
 
@@ -125,18 +136,24 @@ sudo tun c
 sudo tun d
 ```
 
+### Restart (server only)
+
+```bash
+sudo tun r
+```
+
 ## Architecture
 
 ```
 .
 ├── client/        # Client entry point and shell scripts
-├── server/        # Server entry point and shell scripts
+├── server/        # Server entry point, shell scripts, systemd unit
 ├── crypt/         # AES-128-GCM encryption/decryption (OpenSSL EVP)
 ├── ips_storage/   # Client IP tracking (server side)
 ├── poll/          # epoll-based I/O multiplexing
 ├── socket/        # UDP socket handling
-├── tun/           # TUN device interface
-├── utils/         # Utility functions
+├── tun/           # TUN device interface (IFF_NO_PI)
+├── utils/         # Utility functions (IPv4 validation, config, key loading)
 ├── configs.h      # Compile-time constants
 ├── errors.h       # Error codes and category
 └── types.h        # Common types (TBuffer, TBufferView, TConf)
