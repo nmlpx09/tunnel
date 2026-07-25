@@ -42,7 +42,7 @@ std::error_code TPoll::RegisterFd(std::int32_t fd) noexcept {
     }
 
     auto event = epoll_event {
-        .events = EPOLLIN,
+        .events = EPOLLIN | EPOLLET,
         .data = {
             .fd = fd
         }
@@ -71,7 +71,7 @@ std::expected<bool, std::error_code> TPoll::RunOne() noexcept {
             return std::unexpected(EErrorCode::EpollExit);
         }
 
-        if (PollFds.contains(fd) && (events & EPOLLIN) == events) {
+        if (PollFds.contains(fd) && (events & EPOLLIN)) {
             return true;
         }
     }

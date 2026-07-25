@@ -58,6 +58,17 @@ std::error_code TSocket::Init(
         }
     }
 
+    const auto socketBufferSize = 2 * 1024 * 1024;
+    socklen_t optlen = sizeof(socketBufferSize);
+
+    if (auto ret = setsockopt(Fd, SOL_SOCKET, SO_RCVBUF, &socketBufferSize, optlen); ret < 0) {
+        return EErrorCode::SocketConfig;
+    }
+
+    if (auto ret = setsockopt(Fd, SOL_SOCKET, SO_SNDBUF, &socketBufferSize, optlen); ret < 0) {
+        return EErrorCode::SocketConfig;
+    }
+
     return {};
 }
 

@@ -1,9 +1,8 @@
 #pragma once
 
-#include <chrono>
+#include <atomic>
 #include <cstdint>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -17,7 +16,7 @@ public:
     TElement() = default;
 private:
     friend struct TIpsStorage;
-    std::uint32_t Ip;
+    std::uint32_t Ip = 0;
     std::uint16_t Port = 0;
 };
 
@@ -34,9 +33,7 @@ public:
     std::optional<std::pair<std::uint32_t, std::uint16_t>> Get(std::uint32_t key) noexcept;
 
 private:
-    std::unordered_map<std::uint32_t, TElement> Map;
-    std::chrono::steady_clock::time_point LiveTime = std::chrono::steady_clock::now();
-    std::mutex Mutex;
+    std::unordered_map<std::uint32_t, std::atomic<TElement>> Map;
 };
 
 using TIpsStoragePtr = std::shared_ptr<TIpsStorage>;

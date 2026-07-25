@@ -36,15 +36,17 @@ void tx(
         } else if(!result.value()) {
             continue;
         }
-        const auto buffer = tun->Read();
-        if (buffer.empty()) {
-            continue;
-        } else if (!NUtils::ValidIpv4Packet(buffer)) {
-            continue;
-        }
-        if (const auto value = ipsStorage->Get(NUtils::GetDstIpFromIpv4Packet(buffer)); value) {
-            const auto encrBuffer = crypt->Encrypt(buffer);
-            socket->Write(encrBuffer, value->first, value->second);
+        while(!signalStatus.load(std::memory_order_relaxed)) {
+            const auto buffer = tun->Read();
+            if (buffer.empty()) {
+                break;
+            } else if (!NUtils::ValidIpv4Packet(buffer)) {
+                continue;
+            }
+            if (const auto value = ipsStorage->Get(NUtils::GetDstIpFromIpv4Packet(buffer)); value) {
+                const auto encrBuffer = crypt->Encrypt(buffer);
+                socket->Write(encrBuffer, value->first, value->second);
+            }
         }
     }
 }
@@ -65,18 +67,20 @@ void rx(
         } else if(!result.value()) {
             continue;
         }
-        const auto [buffer, ip, port] = socket->Read();
-        if (buffer.empty()) {
-            continue;
-        }
-        const auto decrBuffer = crypt->Decrypt(buffer);
-        if (!NUtils::ValidIpv4Packet(decrBuffer)) {
-            continue;
-        }
+        while (!signalStatus.load(std::memory_order_relaxed)) {
+            const auto [buffer, ip, port] = socket->Read();
+            if (buffer.empty()) {
+                break;
+            }
+            const auto decrBuffer = crypt->Decrypt(buffer);
+            if (!NUtils::ValidIpv4Packet(decrBuffer)) {
+                continue;
+            }
 
-        ipsStorage->Add(NUtils::GetSrcIpFromIpv4Packet(decrBuffer), ip, port);
+            ipsStorage->Add(NUtils::GetSrcIpFromIpv4Packet(decrBuffer), ip, port);
 
-        tun->Write(decrBuffer);
+            tun->Write(decrBuffer);
+        }
     }
 }
 

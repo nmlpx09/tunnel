@@ -35,14 +35,16 @@ void tx(
         } else if(!result.value()) {
             continue;
         }
-        const auto buffer = tun->Read();
-        if (buffer.empty()) {
-            continue;
-        } else if (!NUtils::ValidIpv4Packet(buffer)) {
-            continue;
+        while(!signalStatus.load(std::memory_order_relaxed)) {
+            const auto buffer = tun->Read();
+            if (buffer.empty()) {
+                break;
+            } else if (!NUtils::ValidIpv4Packet(buffer)) {
+                continue;
+            }
+            const auto encrBuffer = crypt->Encrypt(buffer);
+            socket->Write(encrBuffer, conf.RemoteIp, conf.RemotePort);
         }
-        const auto encrBuffer = crypt->Encrypt(buffer);
-        socket->Write(encrBuffer, conf.RemoteIp, conf.RemotePort);
     }
 }
 
@@ -62,17 +64,19 @@ void rx(
         } else if(!result.value()) {
             continue;
         }
-        const auto [buffer, ip, port] = socket->Read();
-        if (buffer.empty()) {
-            continue;
-        } else if (conf.RemoteIp != ip || conf.RemotePort != port) {
-            continue;
+        while(!signalStatus.load(std::memory_order_relaxed)) {
+            const auto [buffer, ip, port] = socket->Read();
+            if (buffer.empty()) {
+                break;
+            } else if (conf.RemoteIp != ip || conf.RemotePort != port) {
+                continue;
+            }
+            const auto decrBuffer = crypt->Decrypt(buffer);
+            if (!NUtils::ValidIpv4Packet(decrBuffer)) {
+                continue;
+            }
+            tun->Write(decrBuffer);
         }
-        const auto decrBuffer = crypt->Decrypt(buffer);
-        if (!NUtils::ValidIpv4Packet(decrBuffer)) {
-            continue;
-        }
-        tun->Write(decrBuffer);
     }
 }
 
