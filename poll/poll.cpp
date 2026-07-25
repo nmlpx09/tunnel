@@ -19,10 +19,6 @@ std::error_code TPoll::Init() {
         return {};
     }
 
-    if (MaxPollEvents == 0) {
-        return EErrorCode::EpollZeroInit;
-    }
-
     if (MaxPollTimeOut > 10000) {
         return EErrorCode::EpollWaitTime;
     }
@@ -31,14 +27,16 @@ std::error_code TPoll::Init() {
         return EErrorCode::EpollCreate;
     }
 
-    Events = std::vector<epoll_event>(MaxPollEvents);
-
     return {};
 }
 
 std::error_code TPoll::RegisterFd(std::int32_t fd) noexcept {
     if (Fd < 0) {
         return EErrorCode::EpollInit;
+    }
+
+    if (RegFds >= 0) {
+        return {};
     }
 
     auto event = epoll_event {
@@ -51,29 +49,31 @@ std::error_code TPoll::RegisterFd(std::int32_t fd) noexcept {
         return EErrorCode::EpollAdd;
     }
 
-    PollFds.insert(fd);
+    RegFds = fd;
 
     return {};
 }
 
-std::expected<bool, std::error_code> TPoll::RunOne() noexcept {
+std::expected<bool, std::error_code> TPoll::Wait() noexcept {
     if (Fd < 0) {
         return std::unexpected(EErrorCode::EpollInit);
     }
 
-    const auto numberFd = epoll_wait(Fd, Events.data(), MaxPollEvents, MaxPollTimeOut);
+    const auto numberFd = epoll_wait(Fd, &Event, 1, MaxPollTimeOut);
 
-    for (auto index = 0; index < numberFd; ++index) {
-        const auto fd = Events[index].data.fd;
-        const auto events = Events[index].events;
+    if (numberFd == 0) {
+        return false;
+    }
 
-        if (events & (EPOLLERR | EPOLLHUP)) {
-            return std::unexpected(EErrorCode::EpollExit);
-        }
+    const auto fd = Event.data.fd;
+    const auto events = Event.events;
 
-        if (PollFds.contains(fd) && (events & EPOLLIN)) {
-            return true;
-        }
+    if (events & (EPOLLERR | EPOLLHUP)) {
+        return std::unexpected(EErrorCode::EpollExit);
+    }
+
+    if (RegFds == fd && (events & EPOLLIN)) {
+        return true;
     }
 
     return false;

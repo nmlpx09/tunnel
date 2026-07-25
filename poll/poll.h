@@ -8,8 +8,6 @@
 #include <expected>
 #include <memory>
 #include <system_error>
-#include <vector>
-#include <unordered_set>
 
 namespace NPoll {
 
@@ -26,14 +24,13 @@ public:
 
     std::error_code RegisterFd(std::int32_t fd) noexcept;
 
-    std::expected<bool, std::error_code> RunOne() noexcept;
+    std::expected<bool, std::error_code> Wait() noexcept;
 
 private:
     std::int32_t Fd = -1;
-    std::size_t MaxPollEvents = 1;
     std::int32_t MaxPollTimeOut = -1;
-    std::vector<epoll_event> Events;
-    std::unordered_set<std::int32_t> PollFds;
+    epoll_event Event;
+    std::int32_t RegFds = -1;
 };
 
 using TPollPtr = std::shared_ptr<TPoll>;

@@ -28,7 +28,7 @@ void tx(
     TConf conf
 ) noexcept {
     while(!signalStatus.load(std::memory_order_relaxed)) {
-        const auto result = poll->RunOne();
+        const auto result = poll->Wait();
         if (!result) {
             log->LogError("tun poll exit");
             break;
@@ -57,7 +57,7 @@ void rx(
     TConf conf
 ) noexcept {
     while(!signalStatus.load(std::memory_order_relaxed)) {
-        const auto result = poll->RunOne();
+        const auto result = poll->Wait();
         if (!result) {
             log->LogError("socket poll exit");
             break;
