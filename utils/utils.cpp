@@ -39,7 +39,7 @@ std::uint32_t GetDstIpFromIpv4Packet(TBufferView buffer) noexcept {
     return val;
 }
 
-std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
+std::pair<std::error_code, TConf> GetConf(bool isClient) {
     TConf conf;
 
     if (auto* value = std::getenv("TUN_DEVICE"); value != nullptr) {
@@ -112,7 +112,7 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) noexcept {
     return {{}, std::move(conf)};
 }
 
-std::optional<std::string> LoadKey(const std::string& keysFile) noexcept {
+std::optional<std::string> LoadKey(const std::string& keysFile) {
     std::ifstream file(keysFile);
     std::string key;
     if (!file.is_open() || !std::getline(file, key)) {

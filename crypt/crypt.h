@@ -20,7 +20,7 @@ public:
     TCrypt& operator=(TCrypt&&) = delete;
     ~TCrypt();
 
-    std::error_code Init(const std::string& key) noexcept;
+    std::error_code Init(const std::string& key);
 
     TBufferView Encrypt(TBufferView buffer) noexcept;
 

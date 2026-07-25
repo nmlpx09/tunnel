@@ -19,8 +19,8 @@ public:
     TTun& operator=(TTun&&) = delete;
     ~TTun();
 
-    std::error_code Init(const std::string& deviceName) noexcept;
-    std::int32_t GetFd() const noexcept;
+    std::error_code Init(const std::string& deviceName);
+    std::int32_t GetFd() const;
 
     void Write(TBufferView buffer) const noexcept;
 

@@ -14,7 +14,7 @@ TPoll::~TPoll() {
 TPoll::TPoll(std::int32_t maxPollTimeOut)
 : MaxPollTimeOut(maxPollTimeOut) { }
 
-std::error_code TPoll::Init() noexcept {
+std::error_code TPoll::Init() {
     if (Fd >= 0) {
         return {};
     }

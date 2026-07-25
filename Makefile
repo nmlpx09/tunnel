@@ -8,10 +8,11 @@ DESTDIR   ?=
 TARGET_CLIENT := client/tun
 TARGET_SERVER := server/tun
 
-DIRS := client server crypt ips_storage poll socket tun utils
+DIRS := client server crypt ips_storage log poll socket tun utils
 
 COMMON_OBJ := \
 	crypt/crypt.o \
+	log/syslog.o \
 	poll/poll.o \
 	socket/socket.o \
 	tun/tun.o \

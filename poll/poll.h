@@ -22,7 +22,7 @@ public:
     TPoll& operator=(TPoll&&) = delete;
     ~TPoll();
 
-    std::error_code Init() noexcept;
+    std::error_code Init();
 
     std::error_code RegisterFd(std::int32_t fd) noexcept;
 

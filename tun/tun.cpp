@@ -24,7 +24,7 @@ TTun::TTun(std::size_t maxBufferSize)
 : MaxBufferSize(maxBufferSize)
 , Buffer(MaxBufferSize, 0) { }
 
-std::error_code TTun::Init(const std::string& deviceName) noexcept {
+std::error_code TTun::Init(const std::string& deviceName) {
     if (Fd >= 0) {
         return {};
     }
@@ -54,12 +54,12 @@ std::error_code TTun::Init(const std::string& deviceName) noexcept {
     return {};
 }
 
-std::int32_t TTun::GetFd() const noexcept {
+std::int32_t TTun::GetFd() const {
     return Fd;
 }
 
 void TTun::Write(TBufferView buffer) const noexcept {
-    if (Fd < 0 || buffer.size() == 0) {
+    if (Fd < 0 || buffer.empty()) {
         return;
     }
 

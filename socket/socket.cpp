@@ -25,7 +25,7 @@ TSocket::TSocket(std::size_t maxBufferSize)
 std::error_code TSocket::Init(
     std::uint32_t localIp,
     std::uint16_t localPort
-) noexcept {
+) {
     if (Fd >= 0) {
         return {};
     }
@@ -61,7 +61,7 @@ std::error_code TSocket::Init(
     return {};
 }
 
-std::int32_t TSocket::GetFd() const noexcept {
+std::int32_t TSocket::GetFd() const {
     return Fd;
 }
 
@@ -70,7 +70,7 @@ void TSocket::Write(
     std::uint32_t remoteIp,
     std::uint16_t remotePort
 ) const noexcept {
-    if (Fd < 0 || buffer.size() == 0) {
+    if (Fd < 0 || buffer.empty()) {
         return;
     }
 

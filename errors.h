@@ -49,37 +49,37 @@ public:
             case Ok:
                 return "ok";
             case KeySize:
-                return "key size error";
+                return "key size";
             case InitKey:
-                return "init key error";
+                return "init key";
             case InitEncrypt:
-                return "init encrypt error";
+                return "init encrypt";
             case InitDecrypt:
-                return "init decrypt error";
+                return "init decrypt";
             case EpollAdd:
-                return "epoll add error";
+                return "epoll add";
             case EpollInit:
-                return "epoll init error";
+                return "epoll init";
             case EpollZeroInit:
-                return "epoll events zero init error";
+                return "epoll events zero init";
             case EpollCreate:
-                return "epoll create error";
+                return "epoll create";
             case EpollExit:
-                return "epoll exit error";
+                return "epoll exit";
             case EpollWaitTime:
                 return "epoll wait time must be less than 10s";
             case SocketOpen:
-                return "socket open error";
+                return "socket open";
             case SocketBind:
-                return "socket bind error";
+                return "socket bind";
             case SocketConfig:
-                return "socket config error";
+                return "socket config";
             case TunOpen:
-                return "tun open error";
+                return "tun open";
             case TunBind:
-                return "tun bind error";
+                return "tun bind";
             case TunConfig:
-                return "tun config error";
+                return "tun config";
             case TunDevice:
                 return "export TUN_DEVICE env";
             case TunMtu:

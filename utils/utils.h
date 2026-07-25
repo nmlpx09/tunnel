@@ -17,8 +17,8 @@ std::uint32_t GetSrcIpFromIpv4Packet(TBufferView buffer) noexcept;
 
 std::uint32_t GetDstIpFromIpv4Packet(TBufferView buffer) noexcept;
 
-std::optional<std::string> LoadKey(const std::string& keysFile) noexcept;
+std::optional<std::string> LoadKey(const std::string& keysFile);
 
-std::pair<std::error_code, TConf> GetConf(bool isClient = true) noexcept;
+std::pair<std::error_code, TConf> GetConf(bool isClient = true);
 
 }

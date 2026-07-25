@@ -1,18 +1,18 @@
 #include <configs.h>
 #include <crypt/crypt.h>
 #include <socket/socket.h>
+#include <log/syslog.h>
 #include <poll/poll.h>
 #include <tun/tun.h>
 #include <utils/utils.h>
 
 #include <atomic>
 #include <csignal>
-#include <iostream>
 #include <memory>
 #include <thread>
 
 namespace {
-    std::atomic<std::sig_atomic_t> signalStatus{0};
+    std::atomic<std::sig_atomic_t> signalStatus = 0;
 }
 
 void SignalHandler(int signal) {
@@ -20,6 +20,7 @@ void SignalHandler(int signal) {
 }
 
 void tx(
+    NLog::TLogPtr log,
     NPoll::TPollPtr poll,
     NTun::TTunPtr tun,
     NSocket::TSocketPtr socket,
@@ -29,12 +30,13 @@ void tx(
     while(!signalStatus.load(std::memory_order_relaxed)) {
         const auto result = poll->RunOne();
         if (!result) {
+            log->LogError("tun poll exit");
             break;
         } else if(!result.value()) {
             continue;
         }
         const auto buffer = tun->Read();
-        if (buffer.size() == 0) {
+        if (buffer.empty()) {
             continue;
         } else if (!NUtils::ValidIpv4Packet(buffer)) {
             continue;
@@ -45,6 +47,7 @@ void tx(
 }
 
 void rx(
+    NLog::TLogPtr log,
     NPoll::TPollPtr poll,
     NTun::TTunPtr tun,
     NSocket::TSocketPtr socket,
@@ -54,12 +57,13 @@ void rx(
     while(!signalStatus.load(std::memory_order_relaxed)) {
         const auto result = poll->RunOne();
         if (!result) {
+            log->LogError("socket poll exit");
             break;
         } else if(!result.value()) {
             continue;
         }
         const auto [buffer, ip, port] = socket->Read();
-        if (buffer.size() == 0) {
+        if (buffer.empty()) {
             continue;
         } else if (conf.RemoteIp != ip || conf.RemotePort != port) {
             continue;
@@ -73,77 +77,80 @@ void rx(
 }
 
 int main() {
+    const auto log = std::make_shared<const NLog::TLog>();
     try {
         const auto& [ec, conf] = NUtils::GetConf();
 
         if (ec) {
-             std::cerr << "get conf error: " << ec.message() << std::endl;
-             return 1;
+            log->LogErrorCode(ec);
+            return 1;
         }
 
-        auto tun = std::make_shared<NTun::TTun>(MAX_DATA_SIZE);
+        const auto tun = std::make_shared<NTun::TTun>(MAX_DATA_SIZE);
 
         if (auto ec = tun->Init(conf.TunDevice); ec) {
-            std::cerr << ec.message() << std::endl;
+            log->LogErrorCode(ec);
             return 2;
         }
 
-        auto socket = std::make_shared<NSocket::TSocket>(MAX_DATA_SIZE);
+        const auto socket = std::make_shared<NSocket::TSocket>(MAX_DATA_SIZE);
 
         if (auto ec = socket->Init(conf.LocalIp, conf.LocalPort); ec) {
-            std::cerr << ec.message() << std::endl;
+            log->LogErrorCode(ec);
             return 3;
         }
 
-        auto pollTun = std::make_shared<NPoll::TPoll>(MAX_POLL_TIMEOUT_MS);
+        const auto pollTun = std::make_shared<NPoll::TPoll>(MAX_POLL_TIMEOUT_MS);
 
         if (auto ec = pollTun->Init(); ec) {
-            std::cerr << ec.message() << std::endl;
+            log->LogErrorCode(ec);
             return 4;
         }
 
         if (auto ec = pollTun->RegisterFd(tun->GetFd()); ec) {
-            std::cerr << ec.message() << std::endl;
+            log->LogErrorCode(ec);
             return 5;
         }
 
-        auto pollSocket = std::make_shared<NPoll::TPoll>(MAX_POLL_TIMEOUT_MS);
+        const auto pollSocket = std::make_shared<NPoll::TPoll>(MAX_POLL_TIMEOUT_MS);
 
         if (auto ec = pollSocket->Init(); ec) {
-            std::cerr << ec.message() << std::endl;
+            log->LogErrorCode(ec);
             return 6;
         }
 
         if (auto ec = pollSocket->RegisterFd(socket->GetFd()); ec) {
-            std::cerr << ec.message() << std::endl;
+            log->LogErrorCode(ec);
             return 7;
         }
 
-        auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
+        const auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
 
         const auto key = NUtils::LoadKey(conf.KeysFile);
 
         if (!key) {
-            std::cerr << "failed load key" << std::endl;
+            log->LogError("failed load key");
             return 8;
         }
 
         if (auto ec = crypt->Init(key.value()); ec) {
-            std::cerr << ec.message() << std::endl;
+            log->LogErrorCode(ec);
             return 9;
         }
 
         signal(SIGINT, SignalHandler);
 
-        std::thread tTx(tx, pollTun, tun, socket, crypt, conf);
-        std::thread tRx(rx, pollSocket, tun, socket, crypt, conf);
+        std::thread tTx(tx, log, pollTun, tun, socket, crypt, conf);
+        std::thread tRx(rx, log, pollSocket, tun, socket, crypt, conf);
 
-        std::cerr << "run client" << std::endl;
+        log->LogInfo("run client");
 
         tTx.join();
         tRx.join();
+
+        log->LogInfo("stop client");
     } catch(const std::exception& exc) {
-        std::cerr << exc.what() << std::endl;
+        log->LogError(exc.what());
         return 10;
     }
 }

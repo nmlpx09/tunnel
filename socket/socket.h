@@ -20,8 +20,8 @@ public:
     TSocket& operator=(TSocket&&) = delete;
     ~TSocket();
 
-    std::error_code Init(std::uint32_t localIp, std::uint16_t localPort) noexcept;
-    std::int32_t GetFd() const noexcept;
+    std::error_code Init(std::uint32_t localIp, std::uint16_t localPort);
+    std::int32_t GetFd() const;
 
     void Write(
         TBufferView,

@@ -24,7 +24,7 @@ TCrypt::TCrypt(std::size_t maxBufferSize)
 : EncBuffer(maxBufferSize + GCM_IV_TAG_SIZE, 0)
 , DecBuffer(maxBufferSize, 0) {}
 
-std::error_code TCrypt::Init(const std::string& key) noexcept {
+std::error_code TCrypt::Init(const std::string& key) {
     if (!DecodeCtx) {
         return EErrorCode::KeySize;
     }
@@ -82,7 +82,7 @@ std::error_code TCrypt::Init(const std::string& key) noexcept {
 }
 
 TBufferView TCrypt::Encrypt(TBufferView buffer) noexcept {
-    if (!EncCtx || buffer.size() == 0 || !std::in_range<std::int32_t>(buffer.size())) {
+    if (!EncCtx || buffer.empty() || !std::in_range<std::int32_t>(buffer.size())) {
         return {};
     }
 
@@ -128,7 +128,7 @@ TBufferView TCrypt::Encrypt(TBufferView buffer) noexcept {
 }
 
 TBufferView TCrypt::Decrypt(TBufferView buffer) noexcept {
-    if (!DecCtx || buffer.size() == 0 || !std::in_range<std::int32_t>(buffer.size())) {
+    if (!DecCtx || buffer.empty() || !std::in_range<std::int32_t>(buffer.size())) {
         return {};
     }
 
