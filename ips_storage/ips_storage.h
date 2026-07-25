@@ -1,6 +1,5 @@
 #pragma once
 
-#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -11,13 +10,10 @@
 namespace NIpsStorage {
 
 struct TElement {
-public:
-    TElement(std::uint32_t ip, std::uint16_t port);
-    TElement() = default;
-private:
-    friend struct TIpsStorage;
     std::uint32_t Ip = 0;
     std::uint16_t Port = 0;
+
+    bool operator ==(const TElement& lhs) const = default;
 };
 
 struct TIpsStorage {
@@ -33,7 +29,7 @@ public:
     std::optional<std::pair<std::uint32_t, std::uint16_t>> Get(std::uint32_t key) noexcept;
 
 private:
-    std::unordered_map<std::uint32_t, std::atomic<TElement>> Map;
+    std::unordered_map<std::uint32_t, TElement> Map;
 };
 
 using TIpsStoragePtr = std::shared_ptr<TIpsStorage>;
