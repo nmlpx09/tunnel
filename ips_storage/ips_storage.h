@@ -1,9 +1,10 @@
 #pragma once
 
+#include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <string>
 #include <unordered_map>
 #include <utility>
 
@@ -12,13 +13,11 @@ namespace NIpsStorage {
 struct TElement {
     std::uint32_t Ip = 0;
     std::uint16_t Port = 0;
-
-    bool operator ==(const TElement& lhs) const = default;
 };
 
 struct TIpsStorage {
 public:
-    TIpsStorage() noexcept = default;
+    TIpsStorage();
     TIpsStorage(const TIpsStorage&) = delete;
     TIpsStorage(TIpsStorage&&) = delete;
     TIpsStorage& operator=(const TIpsStorage&) = delete;
@@ -29,7 +28,10 @@ public:
     std::optional<std::pair<std::uint32_t, std::uint16_t>> Get(std::uint32_t key) noexcept;
 
 private:
-    std::unordered_map<std::uint32_t, TElement> Map;
+    using TMap = std::unordered_map<std::uint32_t, TElement>;
+    std::atomic<std::shared_ptr<TMap>> GetMap;
+    std::shared_ptr<TMap> AddMap;
+    std::chrono::steady_clock::time_point LiveTime = std::chrono::steady_clock::now();
 };
 
 using TIpsStoragePtr = std::shared_ptr<TIpsStorage>;
