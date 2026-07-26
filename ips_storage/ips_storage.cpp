@@ -3,27 +3,32 @@
 namespace NIpsStorage {
 
 TIpsStorage::TIpsStorage()
-: GetMap(std::make_shared<TMap>())
-, AddMap(std::make_shared<TMap>()) {}
+: ReadStorage(std::make_shared<TStorage>(TMap{}, 0))
+, WriteStorage(std::make_shared<TStorage>(TMap{}, 0)) {}
 
-void TIpsStorage::Add(std::uint32_t key, std::uint32_t ip, std::uint16_t port) noexcept {
+void TIpsStorage::Write(std::uint32_t key, std::uint32_t ip, std::uint16_t port) noexcept {
     if (key == 0) {
         return;
     }
 
-    const auto now = std::chrono::steady_clock::now();
-    if (now - LiveTime > std::chrono::seconds(3600)) {
-        LiveTime = now;
-        AddMap->clear();
+    const std::uint64_t now = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
+    ).count();
+
+    if (now - WriteStorage->second > RemoveDelay) {
+        WriteStorage->second = now;
+        std::erase_if(WriteStorage->first,
+            [now, removeDelay = RemoveDelay](const auto& v) { return now - v.second.Ts > removeDelay; }
+        );
     }
 
-    (*AddMap)[key] = TElement{ip, port};
-    AddMap = GetMap.exchange(AddMap, std::memory_order_release);
+    WriteStorage->first[key] = TElement{ip, port, now};
+    WriteStorage = ReadStorage.exchange(WriteStorage, std::memory_order_release);
 }
 
-std::optional<std::pair<std::uint32_t, std::uint16_t>> TIpsStorage::Get(std::uint32_t key) noexcept {
-    const auto map = GetMap.load(std::memory_order_acquire);
-    if (const auto it = map->find(key); it != map->end()) {
+std::optional<std::pair<std::uint32_t, std::uint16_t>> TIpsStorage::Read(std::uint32_t key) noexcept {
+    const auto storage = ReadStorage.load(std::memory_order_acquire);
+    if (const auto it = storage->first.find(key); it != storage->first.end()) {
         const auto value = it->second;
         return std::make_pair(value.Ip, value.Port);
     }

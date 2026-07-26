@@ -42,7 +42,7 @@ void tx(
             } else if (!NUtils::ValidIpv4Packet(buffer)) {
                 continue;
             }
-            if (const auto value = ipsStorage->Get(NUtils::GetDstIpFromIpv4Packet(buffer)); value) {
+            if (const auto value = ipsStorage->Read(NUtils::GetDstIpFromIpv4Packet(buffer)); value) {
                 const auto encrBuffer = crypt->Encrypt(buffer);
                 socket->Write(encrBuffer, value->first, value->second);
             }
@@ -76,7 +76,7 @@ void rx(
                 continue;
             }
 
-            ipsStorage->Add(NUtils::GetSrcIpFromIpv4Packet(decrBuffer), ip, port);
+            ipsStorage->Write(NUtils::GetSrcIpFromIpv4Packet(decrBuffer), ip, port);
 
             tun->Write(decrBuffer);
         }
