@@ -1,5 +1,6 @@
 #include "crypt.h"
 
+#include <configs.h>
 #include <errors.h>
 
 #include <openssl/evp.h>
@@ -21,7 +22,7 @@ TCrypt::~TCrypt() {
 }
 
 TCrypt::TCrypt(std::size_t maxBufferSize)
-: EncBuffer(maxBufferSize + GCM_IV_TAG_SIZE, 0)
+: EncBuffer(maxBufferSize + GCM_OVERHEAD, 0)
 , DecBuffer(maxBufferSize, 0) {}
 
 std::error_code TCrypt::Init(const std::string& key) {
@@ -86,7 +87,7 @@ TBufferView TCrypt::Encrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    if (buffer.size() > EncBuffer.size() - GCM_IV_TAG_SIZE) {
+    if (buffer.size() > EncBuffer.size() - GCM_OVERHEAD) {
         return {};
     }
 
@@ -122,7 +123,7 @@ TBufferView TCrypt::Encrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    const std::size_t totalLen = ciphertextLen + GCM_IV_TAG_SIZE;
+    const std::size_t totalLen = ciphertextLen + GCM_OVERHEAD;
 
     return {EncBuffer.begin(), totalLen};
 }
@@ -132,7 +133,7 @@ TBufferView TCrypt::Decrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    if (buffer.size() <= GCM_IV_TAG_SIZE || buffer.size() > DecBuffer.size() + GCM_IV_TAG_SIZE) {
+    if (buffer.size() <= GCM_OVERHEAD || buffer.size() > DecBuffer.size() + GCM_OVERHEAD) {
         return {};
     }
 
@@ -149,7 +150,7 @@ TBufferView TCrypt::Decrypt(TBufferView buffer) noexcept {
     }
 
     const auto* ciphertext = buffer.data() + GCM_IV_SIZE;
-    const std::int32_t ciphertextLen = buffer.size() - GCM_IV_TAG_SIZE;
+    const std::int32_t ciphertextLen = buffer.size() - GCM_OVERHEAD;
 
     std::int32_t sizeDec = 0;
     if (EVP_DecryptUpdate(DecCtx.get(), DecBuffer.data(), &sizeDec, ciphertext, ciphertextLen) != 1) {
