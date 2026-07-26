@@ -7,17 +7,16 @@
 #include <tun/tun.h>
 #include <utils/utils.h>
 
-#include <atomic>
 #include <csignal>
 #include <memory>
 #include <thread>
 
 namespace {
-    std::atomic<std::sig_atomic_t> signalStatus = 0;
+    std::sig_atomic_t signalStatus = 0;
 }
 
 void SignalHandler(int signal) {
-    signalStatus.store(signal, std::memory_order_relaxed);
+    signalStatus = signal;
 }
 
 void tx(
@@ -28,7 +27,7 @@ void tx(
     NCrypt::TCryptPtr crypt,
     NIpsStorage::TIpsStoragePtr ipsStorage
 ) noexcept {
-    while(!signalStatus.load(std::memory_order_relaxed)) {
+    while(!signalStatus) {
         const auto result = poll->Wait();
         if (!result) {
             log->LogError("tun poll exit");
@@ -36,7 +35,7 @@ void tx(
         } else if(!result.value()) {
             continue;
         }
-        while(!signalStatus.load(std::memory_order_relaxed)) {
+        while(!signalStatus) {
             const auto buffer = tun->Read();
             if (buffer.empty()) {
                 break;
@@ -59,7 +58,7 @@ void rx(
     NCrypt::TCryptPtr crypt,
     NIpsStorage::TIpsStoragePtr ipsStorage
 ) noexcept {
-    while(!signalStatus.load(std::memory_order_relaxed)) {
+    while(!signalStatus) {
         const auto result = poll->Wait();
         if (!result) {
             log->LogError("socket poll exit");
@@ -67,7 +66,7 @@ void rx(
         } else if(!result.value()) {
             continue;
         }
-        while (!signalStatus.load(std::memory_order_relaxed)) {
+        while (!signalStatus) {
             const auto [buffer, ip, port] = socket->Read();
             if (buffer.empty()) {
                 break;
