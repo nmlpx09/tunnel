@@ -35,14 +35,21 @@ void tx(
             continue;
         }
         while(!signalStatus) {
-            const auto buffer = tun->Read();
+            const auto result = tun->Read();
+            if (!result) {
+                log->LogErrorCode(result.error());
+                break;
+            }
+            const auto buffer = result.value();
             if (buffer.empty()) {
                 break;
             } else if (!NUtils::ValidIpv4Packet(buffer)) {
                 continue;
             }
             const auto encrBuffer = crypt->Encrypt(buffer);
-            socket->Write(encrBuffer, conf.RemoteIp, conf.RemotePort);
+            if (auto ec = socket->Write(encrBuffer, conf.RemoteIp, conf.RemotePort); ec) {
+                log->LogErrorCode(ec);
+            }
         }
     }
 }
@@ -64,7 +71,12 @@ void rx(
             continue;
         }
         while(!signalStatus) {
-            const auto [buffer, ip, port] = socket->Read();
+            const auto result = socket->Read();
+            if (!result) {
+                log->LogErrorCode(result.error());
+                break;
+            }
+            const auto [buffer, ip, port] = result.value();
             if (buffer.empty()) {
                 break;
             } else if (conf.RemoteIp != ip || conf.RemotePort != port) {
@@ -74,7 +86,9 @@ void rx(
             if (!NUtils::ValidIpv4Packet(decrBuffer)) {
                 continue;
             }
-            tun->Write(decrBuffer);
+            if (auto ec = tun->Write(decrBuffer); ec) {
+                log->LogErrorCode(ec);
+            }
         }
     }
 }

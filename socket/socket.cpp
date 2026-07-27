@@ -76,13 +76,17 @@ std::int32_t TSocket::GetFd() const {
     return Fd;
 }
 
-void TSocket::Write(
+std::error_code TSocket::Write(
     TBufferView buffer,
     std::uint32_t remoteIp,
     std::uint16_t remotePort
 ) const noexcept {
-    if (Fd < 0 || buffer.empty()) {
-        return;
+    if (Fd < 0) {
+        return EErrorCode::SocketOpen;
+    }
+
+    if (buffer.empty()) {
+        return {};
     }
 
     auto sockaddrRemote = sockaddr_in {
@@ -110,18 +114,16 @@ void TSocket::Write(
 
     const auto writeSize = sendmsg(Fd, &msg, 0);
 
-    if (writeSize < 0) {
-        return;
+    if (writeSize < 0 || static_cast<std::size_t>(writeSize) != buffer.size()) {
+        return EErrorCode::SocketWrite;
     }
+
+    return {};
 }
 
-std::tuple<
-    TBufferView,
-    std::uint32_t,
-    std::uint16_t
-> TSocket::Read() noexcept {
+std::expected<TReadResult, std::error_code> TSocket::Read() noexcept {
     if (Fd < 0) {
-        return {{}, 0, 0};
+        return std::unexpected(EErrorCode::SocketOpen);
     }
 
     auto sockaddrRemote = sockaddr_in {
@@ -149,11 +151,26 @@ std::tuple<
 
     const auto readSize = recvmsg(Fd, &msg, 0);
 
-    if (!std::in_range<std::size_t>(readSize)) {
-        return {{}, 0, 0};
+    if (readSize < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return TReadResult{{}, 0, 0};
+        }
+        return std::unexpected(EErrorCode::SocketRead);
     }
 
-    return {{Buffer.begin(), static_cast<std::size_t>(readSize)}, sockaddrRemote.sin_addr.s_addr, sockaddrRemote.sin_port};
+    if (readSize == 0) {
+        return TReadResult{{}, 0, 0};
+    }
+
+    if (msg.msg_namelen < sizeof(sockaddr_in)) {
+        return std::unexpected(EErrorCode::SocketRead);
+    }
+
+    return TReadResult{
+        {Buffer.begin(), static_cast<std::size_t>(readSize)},
+        sockaddrRemote.sin_addr.s_addr,
+        sockaddrRemote.sin_port
+    };
 }
 
 }

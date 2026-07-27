@@ -36,7 +36,12 @@ void tx(
             continue;
         }
         while(!signalStatus) {
-            const auto buffer = tun->Read();
+            const auto result = tun->Read();
+            if (!result) {
+                log->LogErrorCode(result.error());
+                break;
+            }
+            const auto buffer = result.value();
             if (buffer.empty()) {
                 break;
             } else if (!NUtils::ValidIpv4Packet(buffer)) {
@@ -44,7 +49,9 @@ void tx(
             }
             if (const auto value = ipsStorage->Read(NUtils::GetDstIpFromIpv4Packet(buffer)); value) {
                 const auto encrBuffer = crypt->Encrypt(buffer);
-                socket->Write(encrBuffer, value->first, value->second);
+                if (auto ec = socket->Write(encrBuffer, value->first, value->second); ec) {
+                    log->LogErrorCode(ec);
+                }
             }
         }
     }
@@ -67,7 +74,12 @@ void rx(
             continue;
         }
         while (!signalStatus) {
-            const auto [buffer, ip, port] = socket->Read();
+            const auto result = socket->Read();
+            if (!result) {
+                log->LogErrorCode(result.error());
+                break;
+            }
+            const auto [buffer, ip, port] = result.value();
             if (buffer.empty()) {
                 break;
             }
@@ -78,7 +90,9 @@ void rx(
 
             ipsStorage->Write(NUtils::GetSrcIpFromIpv4Packet(decrBuffer), ip, port);
 
-            tun->Write(decrBuffer);
+            if (auto ec = tun->Write(decrBuffer); ec) {
+                log->LogErrorCode(ec);
+            }
         }
     }
 }

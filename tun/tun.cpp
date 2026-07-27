@@ -58,30 +58,43 @@ std::int32_t TTun::GetFd() const {
     return Fd;
 }
 
-void TTun::Write(TBufferView buffer) const noexcept {
-    if (Fd < 0 || buffer.empty()) {
-        return;
+std::error_code TTun::Write(TBufferView buffer) const noexcept {
+    if (Fd < 0) {
+        return EErrorCode::TunOpen;
+    }
+
+    if (buffer.empty()) {
+        return {};
     }
 
     const auto writeSize = write(Fd, buffer.data(), buffer.size());
 
-    if (writeSize < 0) {
-        return;
+    if (writeSize < 0 || static_cast<std::size_t>(writeSize) != buffer.size()) {
+        return EErrorCode::TunWrite;
     }
+
+    return {};
 }
 
-TBufferView TTun::Read() noexcept {
+std::expected<TBufferView, std::error_code> TTun::Read() noexcept {
     if (Fd < 0) {
-        return {};
+        return std::unexpected(EErrorCode::TunOpen);
     }
 
     const auto readSize = read(Fd, Buffer.data(), MaxBufferSize);
 
-    if (!std::in_range<std::size_t>(readSize)) {
+    if (readSize < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return {};
+        }
+        return std::unexpected(EErrorCode::TunRead);
+    }
+
+    if (readSize == 0) {
         return {};
     }
 
-    return {Buffer.begin(), static_cast<std::size_t>(readSize)};
+    return TBufferView{Buffer.begin(), static_cast<std::size_t>(readSize)};
 }
 
 }

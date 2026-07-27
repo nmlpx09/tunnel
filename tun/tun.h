@@ -3,6 +3,7 @@
 #include <types.h>
 
 #include <cstdint>
+#include <expected>
 #include <functional>
 #include <memory>
 #include <string>
@@ -22,9 +23,9 @@ public:
     std::error_code Init(const std::string& deviceName);
     std::int32_t GetFd() const;
 
-    void Write(TBufferView buffer) const noexcept;
+    std::error_code Write(TBufferView buffer) const noexcept;
 
-    TBufferView Read() noexcept;
+    std::expected<TBufferView, std::error_code> Read() noexcept;
 
 private:
     std::int32_t Fd = -1;
