@@ -114,7 +114,14 @@ std::error_code TSocket::Write(
 
     const auto writeSize = sendmsg(Fd, &msg, 0);
 
-    if (writeSize < 0 || static_cast<std::size_t>(writeSize) != buffer.size()) {
+    if (writeSize < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return EErrorCode::SocketOverflow;
+        }
+        return EErrorCode::SocketWrite;
+    }
+
+    if (static_cast<std::size_t>(writeSize) != buffer.size()) {
         return EErrorCode::SocketWrite;
     }
 

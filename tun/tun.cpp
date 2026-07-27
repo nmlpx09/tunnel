@@ -69,7 +69,14 @@ std::error_code TTun::Write(TBufferView buffer) const noexcept {
 
     const auto writeSize = write(Fd, buffer.data(), buffer.size());
 
-    if (writeSize < 0 || static_cast<std::size_t>(writeSize) != buffer.size()) {
+    if (writeSize < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return EErrorCode::TunOverflow;
+        }
+        return EErrorCode::TunWrite;
+    }
+
+    if (static_cast<std::size_t>(writeSize) != buffer.size()) {
         return EErrorCode::TunWrite;
     }
 

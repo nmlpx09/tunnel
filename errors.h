@@ -19,11 +19,13 @@ enum EErrorCode {
     SocketConfig,
     SocketWrite,
     SocketRead,
+    SocketOverflow,
     TunOpen,
     TunBind,
     TunConfig,
     TunWrite,
     TunRead,
+    TunOverflow,
     TunDevice,
     TunMtu,
     TunMtuConvert,
@@ -82,6 +84,8 @@ public:
                 return "socket write";
             case SocketRead:
                 return "socket read";
+            case SocketOverflow:
+                return "socket overflow";
             case TunOpen:
                 return "tun open";
             case TunBind:
@@ -92,6 +96,8 @@ public:
                 return "tun write";
             case TunRead:
                 return "tun read";
+            case TunOverflow:
+                return "tun overflow";
             case TunDevice:
                 return "export TUN_DEVICE env";
             case TunMtu:
