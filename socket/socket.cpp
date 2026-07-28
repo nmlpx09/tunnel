@@ -19,9 +19,8 @@ TSocket::~TSocket() {
     }
 }
 
-TSocket::TSocket(std::size_t maxBufferSize)
-: MaxBufferSize(maxBufferSize)
-, Buffer(MaxBufferSize, 0) { }
+TSocket::TSocket(std::size_t maxReadSize)
+: MaxReadSize(maxReadSize) {}
 
 std::error_code TSocket::Init(
     std::uint32_t localIp,
@@ -29,6 +28,10 @@ std::error_code TSocket::Init(
 ) {
     if (Fd >= 0) {
         return {};
+    }
+
+    if (MaxReadSize > Buffer.max_size()) {
+        return EErrorCode::MaxReadSize;
     }
 
     if (Fd = socket(AF_INET, SOCK_DGRAM, 0); Fd < 0) {
@@ -144,7 +147,7 @@ std::expected<TReadResult, std::error_code> TSocket::Read() noexcept {
     };
 
     iovec iov[] = {
-        { .iov_base = Buffer.data(), .iov_len = MaxBufferSize }
+        { .iov_base = Buffer.data(), .iov_len = MaxReadSize }
     };
 
     msghdr msg = {

@@ -13,7 +13,7 @@ namespace NCrypt {
 
 struct TCrypt {
 public:
-    TCrypt(std::size_t maxBufferSize);
+    TCrypt() = default;
     TCrypt(const TCrypt&) = delete;
     TCrypt(TCrypt&&) = delete;
     TCrypt& operator=(const TCrypt&) = delete;
@@ -27,8 +27,6 @@ public:
     TBufferView Decrypt(TBufferView buffer) noexcept;
 
 private:
-    static constexpr std::size_t AES_KEY_SIZE = 16;
-
     using TCipherCtxPtr = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
     using TDecodeCtxPtr = std::unique_ptr<EVP_ENCODE_CTX, decltype(&EVP_ENCODE_CTX_free)>;
 

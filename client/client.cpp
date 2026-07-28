@@ -141,7 +141,7 @@ int main() {
             return 7;
         }
 
-        const auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
+        const auto crypt = std::make_shared<NCrypt::TCrypt>();
 
         const auto key = NUtils::LoadKey(conf.KeysFile);
 

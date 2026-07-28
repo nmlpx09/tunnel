@@ -36,6 +36,7 @@ enum EErrorCode {
     RemotePortConvert,
     LocalPort,
     LocalPortConvert,
+    MaxReadSize
 };
 
 namespace std {
@@ -118,6 +119,8 @@ public:
                 return "export LOCAL_PORT env";
             case LocalPortConvert:
                 return "convert LOCAL_PORT from string";
+            case MaxReadSize:
+                return "max read size must be less than MAX_DATA_SIZE";
         }
 
         return "unknown error code: " + std::to_string(value);

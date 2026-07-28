@@ -20,15 +20,18 @@ TTun::~TTun() {
     }
 }
 
-TTun::TTun(std::size_t maxBufferSize)
-: MaxBufferSize(maxBufferSize)
-, Buffer(MaxBufferSize, 0) { }
+TTun::TTun(std::size_t maxReadSize)
+: MaxReadSize(maxReadSize) {}
 
 std::error_code TTun::Init(const std::string& deviceName) {
     if (Fd >= 0) {
         return {};
     }
- 
+
+    if (MaxReadSize > Buffer.max_size()) {
+        return EErrorCode::MaxReadSize;
+    }
+
     if (Fd = open("/dev/net/tun", O_RDWR); Fd < 0) {
         return EErrorCode::TunOpen;
     }
@@ -88,7 +91,7 @@ std::expected<TBufferView, std::error_code> TTun::Read() noexcept {
         return std::unexpected(EErrorCode::TunOpen);
     }
 
-    const auto readSize = read(Fd, Buffer.data(), MaxBufferSize);
+    const auto readSize = read(Fd, Buffer.data(), MaxReadSize);
 
     if (readSize < 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {

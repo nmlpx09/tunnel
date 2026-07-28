@@ -20,7 +20,7 @@ struct TReadResult {
 
 struct TSocket {
 public:
-    TSocket(std::size_t maxBufferSize);
+    TSocket(std::size_t maxReadSize);
     TSocket(const TSocket&) = delete;
     TSocket(TSocket&&) = delete;
     TSocket& operator=(const TSocket&) = delete;
@@ -40,7 +40,7 @@ public:
 
 private:
     std::int32_t Fd = -1;
-    std::size_t MaxBufferSize = 0;
+    std::size_t MaxReadSize = 0;
     TBuffer Buffer;
 };
 

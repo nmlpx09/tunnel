@@ -1,11 +1,13 @@
 #pragma once
 
+#include <configs.h>
+
+#include <array>
 #include <cstdint>
-#include <vector>
 #include <string>
 #include <span>
 
-using TBuffer = std::vector<std::uint8_t>;
+using TBuffer = std::array<std::uint8_t, MAX_DATA_SIZE>;
 using TBufferView = std::span<TBuffer::value_type>;
 
 struct TConf {

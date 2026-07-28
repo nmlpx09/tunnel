@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <vector>
 
 namespace NCrypt {
 
@@ -21,10 +22,6 @@ TCrypt::~TCrypt() {
     }
 }
 
-TCrypt::TCrypt(std::size_t maxBufferSize)
-: EncBuffer(maxBufferSize, 0)
-, DecBuffer(maxBufferSize, 0) {}
-
 std::error_code TCrypt::Init(const std::string& key) {
     if (!DecodeCtx) {
         return EErrorCode::KeySize;
@@ -34,7 +31,7 @@ std::error_code TCrypt::Init(const std::string& key) {
         return EErrorCode::KeySize;
     }
 
-    TBuffer decodeKey(key.size(), 0);
+    std::vector<std::uint8_t> decodeKey(key.size(), 0);
     std::int32_t decodeKeySize = 0;
     std::int32_t decodeKeySizeFinal = 0;
 
@@ -65,7 +62,7 @@ std::error_code TCrypt::Init(const std::string& key) {
 
     const size_t keySize = decodeKeySize + decodeKeySizeFinal;
 
-    if (keySize != AES_KEY_SIZE) {
+    if (keySize != GCM_KEY_SIZE) {
         return EErrorCode::KeySize;
     }
 

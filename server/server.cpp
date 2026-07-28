@@ -147,7 +147,7 @@ int main() {
 
         const auto ipsStorage = std::make_shared<NIpsStorage::TIpsStorage>();
 
-        const auto crypt = std::make_shared<NCrypt::TCrypt>(MAX_DATA_SIZE);
+        const auto crypt = std::make_shared<NCrypt::TCrypt>();
 
         const auto key = NUtils::LoadKey(conf.KeysFile);
 
