@@ -19,7 +19,11 @@ struct TElement {
 };
 
 using TMap = std::unordered_map<std::uint32_t, TElement>;
-using TStorage = std::pair<TMap, TTs>;
+
+struct TStorage {
+    TMap Map;
+    TTs Ts = 0;
+};
 
 struct TIpsStorage {
 public:
@@ -36,6 +40,7 @@ private:
     std::atomic<std::shared_ptr<TStorage>> ReadStorage;
     std::shared_ptr<TStorage> WriteStorage;
     const TTs RemoveDelay = 3600;
+    const TTs CheckDelay = 600;
 };
 
 using TIpsStoragePtr = std::shared_ptr<TIpsStorage>;

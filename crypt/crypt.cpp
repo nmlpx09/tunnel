@@ -22,7 +22,7 @@ TCrypt::~TCrypt() {
 }
 
 TCrypt::TCrypt(std::size_t maxBufferSize)
-: EncBuffer(maxBufferSize + GCM_OVERHEAD, 0)
+: EncBuffer(maxBufferSize, 0)
 , DecBuffer(maxBufferSize, 0) {}
 
 std::error_code TCrypt::Init(const std::string& key) {
@@ -87,7 +87,7 @@ TBufferView TCrypt::Encrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    if (buffer.size() > EncBuffer.size() - GCM_OVERHEAD) {
+    if (buffer.size() + GCM_OVERHEAD > EncBuffer.size()) {
         return {};
     }
 

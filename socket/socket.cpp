@@ -1,5 +1,6 @@
 #include "socket.h"
 
+#include <configs.h>
 #include <errors.h>
 
 #include <arpa/inet.h>
@@ -58,7 +59,7 @@ std::error_code TSocket::Init(
         }
     }
 
-    const auto socketBufferSize = 2 * 1024 * 1024;
+    const auto socketBufferSize = SOCKET_BUFFER_SIZE;
     socklen_t optlen = sizeof(socketBufferSize);
 
     if (auto ret = setsockopt(Fd, SOL_SOCKET, SO_RCVBUF, &socketBufferSize, optlen); ret < 0) {
