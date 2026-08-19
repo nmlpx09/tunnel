@@ -14,7 +14,7 @@ TBufferView TTable::Encrypt(TBufferView buffer) noexcept {
 
     std::size_t index = 0;
     for (; index < buffer.size(); ++index) {
-        EncBuffer[index] = EncryptTable[buffer[index]];
+        EncBuffer[index] = ENCRYPT_TABLE[buffer[index]];
     }
     return {EncBuffer.begin(), index};
 }
@@ -26,7 +26,7 @@ TBufferView TTable::Decrypt(TBufferView buffer) noexcept {
 
     std::size_t index = 0;
     for (; index < buffer.size(); ++index) {
-        DecBuffer[index] = DecryptTable[buffer[index]];
+        DecBuffer[index] = DECRYPT_TABLE[buffer[index]];
     }
     return {DecBuffer.begin(), index};
 }

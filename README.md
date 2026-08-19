@@ -104,6 +104,15 @@ All configuration is done via environment variables:
 | `LOCAL_PORT`   | Local UDP port (server only)         |
 | `KEYS_FILE`    | Path to file with AES-128 key in base64 |
 
+### Crypt Method
+
+Compile-time selection between two encryption methods:
+
+| Method  | Description                                         | Build            | Key Required |
+|---------|-----------------------------------------------------|------------------|--------------|
+| `aes`   | AES-128-GCM authenticated encryption (OpenSSL EVP)  | `make`           | Yes          |
+| `table` | 256-byte substitution table cipher                  | `make table`     | No           |
+
 ### Keys File
 
 The keys file must contain the AES-128 key on the first line, base64-encoded:
@@ -148,8 +157,11 @@ sudo tun r
 .
 ├── client/        # Client entry point and shell scripts
 ├── server/        # Server entry point, shell scripts, systemd unit
-├── crypt/         # AES-128-GCM encryption/decryption (OpenSSL EVP)
+├── crypt/         # Encryption/decryption interface
+│   ├── aes/       # AES-128-GCM (OpenSSL EVP)
+│   └── table/     # 256-byte substitution table
 ├── ips_storage/   # Client IP tracking (server side)
+├── log/           # Syslog logging
 ├── poll/          # epoll-based I/O multiplexing
 ├── socket/        # UDP socket handling
 ├── tun/           # TUN device interface (IFF_NO_PI)
