@@ -1,6 +1,8 @@
 #include "impl.h"
 #include "table.h"
 
+#include <algorithm>
+
 namespace NCrypt {
 
 std::error_code TTable::Init(const std::string&) {
@@ -12,11 +14,10 @@ TBufferView TTable::Encrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    std::size_t index = 0;
-    for (; index < buffer.size(); ++index) {
-        EncBuffer[index] = ENCRYPT_TABLE[buffer[index]];
-    }
-    return {EncBuffer.begin(), index};
+    std::transform(buffer.cbegin(), buffer.cend(), EncBuffer.begin(),
+        [&](const auto& v) { return ENCRYPT_TABLE[v]; });
+
+    return {EncBuffer.begin(), buffer.size()};
 }
 
 TBufferView TTable::Decrypt(TBufferView buffer) noexcept {
@@ -24,11 +25,10 @@ TBufferView TTable::Decrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    std::size_t index = 0;
-    for (; index < buffer.size(); ++index) {
-        DecBuffer[index] = DECRYPT_TABLE[buffer[index]];
-    }
-    return {DecBuffer.begin(), index};
+    std::transform(buffer.cbegin(), buffer.cend(), DecBuffer.begin(),
+        [&](const auto& v) { return DECRYPT_TABLE[v]; });
+
+    return {DecBuffer.begin(), buffer.size()};
 }
 
 }
