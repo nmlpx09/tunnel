@@ -1,10 +1,9 @@
 #pragma once
 
-#include "interface.h"
+#include <crypt/interface.h>
+#include <types.h>
 
 #include <openssl/evp.h>
-
-#include <types.h>
 
 #include <cstdint>
 #include <memory>

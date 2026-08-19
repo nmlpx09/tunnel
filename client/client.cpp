@@ -1,8 +1,8 @@
 #include <configs.h>
 #ifdef TABLE
-#include <crypt/table.h>
+#include <crypt/table/impl.h>
 #else
-#include <crypt/aes.h>
+#include <crypt/aes/impl.h>
 #endif
 #include <socket/socket.h>
 #include <log/syslog.h>
