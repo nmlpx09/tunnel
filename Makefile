@@ -32,12 +32,16 @@ ALL_DEPS := $(CLIENT_OBJ:.o=.d) $(SERVER_OBJ:.o=.d)
         uninstall uninstall_client uninstall_server \
         install_termux uninstall_termux \
         install_service uninstall_service \
-        debug release
+        debug release table
 
 ifdef DEBUG
 CXXFLAGS += -g -O0 -DDEBUG
 else
 CXXFLAGS += -O3
+endif
+
+ifdef TABLE
+CXXFLAGS += -DTABLE
 endif
 
 all: client server
@@ -106,3 +110,6 @@ debug:
 
 release:
 	$(MAKE) all
+
+table:
+	$(MAKE) TABLE=1 all

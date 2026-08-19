@@ -63,11 +63,13 @@ std::pair<std::error_code, TConf> GetConf(bool isClient) {
         return {EErrorCode::TunMtu, {}};
     }
 
+    #ifndef TABLE
     if (auto* value = std::getenv("KEYS_FILE"); value != nullptr) {
         conf.KeysFile = value;
     } else {
         return {EErrorCode::KeysFile, {}};
     }
+    #endif
 
     if (isClient) {
         if (auto* value = std::getenv("REMOTE_IP"); value != nullptr) {
