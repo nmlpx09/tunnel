@@ -1,5 +1,5 @@
 #include <configs.h>
-#include <crypt/crypt.h>
+#include <crypt/aes.h>
 #include <ips_storage/ips_storage.h>
 #include <socket/socket.h>
 #include <log/syslog.h>
@@ -147,7 +147,7 @@ int main() {
 
         const auto ipsStorage = std::make_shared<NIpsStorage::TIpsStorage>();
 
-        const auto crypt = std::make_shared<NCrypt::TCrypt>();
+        const NCrypt::TCryptPtr crypt = std::make_shared<NCrypt::TAes>();
 
         const auto key = NUtils::LoadKey(conf.KeysFile);
 

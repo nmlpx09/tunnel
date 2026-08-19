@@ -1,5 +1,5 @@
 #include <configs.h>
-#include <crypt/crypt.h>
+#include <crypt/aes.h>
 #include <socket/socket.h>
 #include <log/syslog.h>
 #include <poll/poll.h>
@@ -141,7 +141,7 @@ int main() {
             return 7;
         }
 
-        const auto crypt = std::make_shared<NCrypt::TCrypt>();
+        const NCrypt::TCryptPtr crypt = std::make_shared<NCrypt::TAes>();
 
         const auto key = NUtils::LoadKey(conf.KeysFile);
 

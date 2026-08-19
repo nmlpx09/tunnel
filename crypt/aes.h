@@ -1,5 +1,7 @@
 #pragma once
 
+#include "interface.h"
+
 #include <openssl/evp.h>
 
 #include <types.h>
@@ -11,20 +13,20 @@
 
 namespace NCrypt {
 
-struct TCrypt {
+struct TAes : TInterface {
 public:
-    TCrypt() = default;
-    TCrypt(const TCrypt&) = delete;
-    TCrypt(TCrypt&&) = delete;
-    TCrypt& operator=(const TCrypt&) = delete;
-    TCrypt& operator=(TCrypt&&) = delete;
-    ~TCrypt();
+    TAes() = default;
+    TAes(const TAes&) = delete;
+    TAes(TAes&&) = delete;
+    TAes& operator=(const TAes&) = delete;
+    TAes& operator=(TAes&&) = delete;
+    ~TAes();
 
-    std::error_code Init(const std::string& key);
+    std::error_code Init(const std::string& key) override;
 
-    TBufferView Encrypt(TBufferView buffer) noexcept;
+    TBufferView Encrypt(TBufferView buffer) noexcept override;
 
-    TBufferView Decrypt(TBufferView buffer) noexcept;
+    TBufferView Decrypt(TBufferView buffer) noexcept override;
 
 private:
     using TCipherCtxPtr = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
@@ -38,7 +40,5 @@ private:
     TBuffer EncBuffer;
     TBuffer DecBuffer;
 };
-
-using TCryptPtr = std::shared_ptr<TCrypt>;
 
 }

@@ -1,4 +1,4 @@
-#include "crypt.h"
+#include "aes.h"
 
 #include <configs.h>
 #include <errors.h>
@@ -12,7 +12,7 @@
 
 namespace NCrypt {
 
-TCrypt::~TCrypt() {
+TAes::~TAes() {
     if (EncCtx) {
         EVP_CIPHER_CTX_reset(EncCtx.get());
     }
@@ -22,7 +22,7 @@ TCrypt::~TCrypt() {
     }
 }
 
-std::error_code TCrypt::Init(const std::string& key) {
+std::error_code TAes::Init(const std::string& key) {
     if (!DecodeCtx) {
         return EErrorCode::KeySize;
     }
@@ -79,7 +79,7 @@ std::error_code TCrypt::Init(const std::string& key) {
     return {};
 }
 
-TBufferView TCrypt::Encrypt(TBufferView buffer) noexcept {
+TBufferView TAes::Encrypt(TBufferView buffer) noexcept {
     if (!EncCtx || buffer.empty() || !std::in_range<std::int32_t>(buffer.size())) {
         return {};
     }
@@ -125,7 +125,7 @@ TBufferView TCrypt::Encrypt(TBufferView buffer) noexcept {
     return {EncBuffer.begin(), totalLen};
 }
 
-TBufferView TCrypt::Decrypt(TBufferView buffer) noexcept {
+TBufferView TAes::Decrypt(TBufferView buffer) noexcept {
     if (!DecCtx || buffer.empty() || !std::in_range<std::int32_t>(buffer.size())) {
         return {};
     }
