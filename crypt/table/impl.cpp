@@ -14,7 +14,7 @@ TBufferView TTable::Encrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    std::transform(buffer.cbegin(), buffer.cend(), EncBuffer.begin(),
+    std::transform(buffer.begin(), buffer.end(), EncBuffer.begin(),
         [&](const auto& v) { return ENCRYPT_TABLE[v]; });
 
     return {EncBuffer.begin(), buffer.size()};
@@ -25,7 +25,7 @@ TBufferView TTable::Decrypt(TBufferView buffer) noexcept {
         return {};
     }
 
-    std::transform(buffer.cbegin(), buffer.cend(), DecBuffer.begin(),
+    std::transform(buffer.begin(), buffer.end(), DecBuffer.begin(),
         [&](const auto& v) { return DECRYPT_TABLE[v]; });
 
     return {DecBuffer.begin(), buffer.size()};

@@ -173,7 +173,7 @@ std::expected<TReadResult, std::error_code> TSocket::Read() noexcept {
         return TReadResult{{}, 0, 0};
     }
 
-    if (msg.msg_namelen < sizeof(sockaddr_in)) {
+    if (static_cast<std::size_t>(msg.msg_namelen) < sizeof(sockaddr_in)) {
         return std::unexpected(EErrorCode::SocketRead);
     }
 

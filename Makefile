@@ -68,14 +68,12 @@ $(foreach dir,$(DIRS),$(eval $(call compile_rule,$(dir))))
 clean:
 	rm -f $(CLIENT_OBJ) $(SERVER_OBJ) $(ALL_DEPS) $(TARGET_CLIENT) $(TARGET_SERVER)
 
-install: install_client install_server
-
-install_client: client
+install_client:
 	install -d $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 -s $(TARGET_CLIENT) $(DESTDIR)$(PREFIX)/bin/tun0
 	install -m 0755 client/tun.sh $(DESTDIR)$(PREFIX)/bin/tun
 
-install_server: server
+install_server:
 	install -d $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 -s $(TARGET_SERVER) $(DESTDIR)$(PREFIX)/bin/tun0
 	install -m 0755 server/tun.sh $(DESTDIR)$(PREFIX)/bin/tun
@@ -88,7 +86,7 @@ uninstall_client:
 uninstall_server:
 	rm -f $(DESTDIR)$(PREFIX)/bin/tun0 $(DESTDIR)$(PREFIX)/bin/tun
 
-install_service: install_server
+install_service:
 	install -d $(DESTDIR)/etc/systemd/system
 	install -m 0644 server/tunnel.service $(DESTDIR)/etc/systemd/system/tunnel.service
 
@@ -97,7 +95,7 @@ uninstall_service:
 
 TERMUX_PREFIX := /data/data/com.termux/files/usr
 
-install_termux: client server
+install_termux:
 	install -d $(TERMUX_PREFIX)/bin
 	install -m 0755 $(TARGET_CLIENT) $(TERMUX_PREFIX)/bin/tun0
 	install -m 0755 client/tun_termux.sh $(TERMUX_PREFIX)/bin/tun
