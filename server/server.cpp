@@ -1,9 +1,5 @@
 #include <configs.h>
-#ifdef TABLE
-#include <crypt/table/impl.h>
-#else
 #include <crypt/aes/impl.h>
-#endif
 #include <ips_storage/ips_storage.h>
 #include <socket/socket.h>
 #include <log/syslog.h>
@@ -151,9 +147,6 @@ int main() {
 
         const auto ipsStorage = std::make_shared<NIpsStorage::TIpsStorage>();
 
-        #ifdef TABLE
-        const NCrypt::TCryptPtr crypt = std::make_shared<NCrypt::TTable>();
-        #else
         const NCrypt::TCryptPtr crypt = std::make_shared<NCrypt::TAes>();
 
         const auto key = NUtils::LoadKey(conf.KeysFile);
@@ -167,7 +160,6 @@ int main() {
             log->LogErrorCode(ec);
             return 9;
         }
-        #endif
 
         signal(SIGINT, SignalHandler);
 
